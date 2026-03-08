@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { supabase, CLIENT } from './supabase.js'
+import { useState } from 'react'
+
 import {
   ComposedChart, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
