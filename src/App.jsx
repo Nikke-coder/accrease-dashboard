@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useRef } from "react";
+import { supabase } from './supabase.js';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const STYLE = `
@@ -27,10 +28,11 @@ const STYLE = `
 
 
 // ─── CLIENT CONFIG ───────────────────────────────────────────────────────────
-const PASSWORD    = 'accrease2026!';
-const SESSION_KEY = 'accrease_auth';
-const ACCENT      = '#86efac';
-const CLIENT_NAME = 'Accrease Oy';
+const PASSWORD      = 'accrease2026!';
+const SESSION_KEY   = 'accrease_auth';
+const ACCENT        = '#86efac';
+const CLIENT_NAME   = 'Accrease Oy';
+const ALLOWED_EMAILS = ['lukas.paulikas@accrease.com'];
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const BLUE="#3b82f6",GREEN="#22c55e",AMBER="#f59e0b",RED="#f87171",PURPLE="#a78bfa",CYAN="#06b6d4",SLATE="#64748b";
@@ -930,6 +932,117 @@ function GroupStructureTab({entities,selectedEnt,setSelectedEnt,editingEnt,setEd
   );
 }
 
+
+// ── SETTINGS CORNER ──────────────────────────────────────────────────────────
+function SettingsMenu() {
+  const [open,    setOpen]   = React.useState(false);
+  const [mode,    setMode]   = React.useState(null); // null | "pw"
+  const [pw,      setPw]     = React.useState("");
+  const [pw2,     setPw2]    = React.useState("");
+  const [msg,     setMsg]    = React.useState("");
+  const [loading, setLoad]   = React.useState(false);
+  const ref = React.useRef(null);
+
+  React.useEffect(()=>{
+    const handler = (e) => { if(ref.current && !ref.current.contains(e.target)) { setOpen(false); setMode(null); } };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  },[]);
+
+  const showMsg = (m, isErr=false) => {
+    setMsg({text:m, err:isErr});
+    setTimeout(()=>setMsg(""), 4000);
+  };
+
+  const doChangePw = async () => {
+    if (!pw || pw.length < 8) { showMsg("Minimum 8 characters", true); return; }
+    if (pw !== pw2) { showMsg("Passwords don't match", true); return; }
+    if (!supabase) { showMsg("Auth not configured", true); return; }
+    setLoad(true);
+    const { error } = await supabase.auth.updateUser({ password: pw });
+    if (error) { showMsg(error.message, true); }
+    else { showMsg("✓ Password updated"); setPw(""); setPw2(""); setMode(null); }
+    setLoad(false);
+  };
+
+  const doSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
+
+  const inpStyle = { width:"100%", background:"#070c17", border:"1px solid #1e2d45",
+    borderRadius:8, padding:"9px 12px", color:"#e2e8f0", fontSize:12, outline:"none",
+    fontFamily:"'DM Sans',sans-serif", marginBottom:8, boxSizing:"border-box" };
+
+  return (
+    <div ref={ref} style={{position:"relative"}}>
+      <button onClick={()=>{setOpen(o=>!o); setMode(null); setMsg("");}}
+        style={{width:32,height:32,borderRadius:8,border:"1px solid #1e2d45",background:"transparent",
+          cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+          color:open?"#e2e8f0":"#475569",transition:"all 0.15s"}}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{position:"absolute",top:40,right:0,width:240,background:"#0c1420",
+          border:"1px solid #1e2d45",borderRadius:10,boxShadow:"0 12px 40px #000c",
+          zIndex:2000,overflow:"hidden"}}>
+
+          {!mode && <>
+            <button onClick={()=>setMode("pw")}
+              style={{width:"100%",padding:"11px 16px",background:"transparent",border:"none",
+                borderBottom:"1px solid #0f1e30",color:"#94a3b8",fontSize:12,cursor:"pointer",
+                textAlign:"left",fontFamily:"'DM Sans',sans-serif",display:"flex",
+                alignItems:"center",gap:10}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              Change password
+            </button>
+            <button onClick={doSignOut}
+              style={{width:"100%",padding:"11px 16px",background:"transparent",border:"none",
+                color:"#f87171",fontSize:12,cursor:"pointer",textAlign:"left",
+                fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:10}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Sign out
+            </button>
+          </>}
+
+          {mode==="pw" && (
+            <div style={{padding:16}}>
+              <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0",marginBottom:12,
+                display:"flex",alignItems:"center",gap:8}}>
+                <span onClick={()=>setMode(null)} style={{cursor:"pointer",color:"#475569",fontSize:16,lineHeight:1}}>←</span>
+                Change password
+              </div>
+              <input type="password" value={pw} onChange={e=>setPw(e.target.value)}
+                placeholder="New password" style={inpStyle}/>
+              <input type="password" value={pw2} onChange={e=>setPw2(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&doChangePw()}
+                placeholder="Confirm password" style={{...inpStyle,marginBottom:12}}/>
+              <button onClick={doChangePw} disabled={loading}
+                style={{width:"100%",padding:"9px",background:loading?"#1e2d45":ACCENT,
+                  border:"none",borderRadius:8,color:loading?"#475569":"#080b12",
+                  fontWeight:700,fontSize:12,cursor:loading?"not-allowed":"pointer",
+                  fontFamily:"'DM Sans',sans-serif"}}>
+                {loading?"Updating…":"Update password"}
+              </button>
+              {msg && <div style={{marginTop:8,fontSize:11,textAlign:"center",
+                color:msg.err?"#f87171":"#4ade80",fontFamily:"'DM Mono',monospace"}}>
+                {msg.text}
+              </div>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Dashboard() {
   const [tab,         setTab]        = useState("group");
   const [year,        setYear]       = useState("2025");
@@ -1186,10 +1299,13 @@ function Dashboard() {
             <div style={{fontSize:10,color:"#334155",fontFamily:"'DM Mono',monospace"}}>Financial Dashboard · {year}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:6}}>
-          {["2023","2024","2025","2026"].map(y=>(
-            <button key={y} className={"yr-btn"+(year===y?" active":"")} onClick={()=>setYear(y)}>{y}</button>
-          ))}
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{display:"flex",gap:6}}>
+            {["2023","2024","2025","2026"].map(y=>(
+              <button key={y} className={"yr-btn"+(year===y?" active":"")} onClick={()=>setYear(y)}>{y}</button>
+            ))}
+          </div>
+          <SettingsMenu/>
         </div>
       </div>
 
@@ -1607,36 +1723,182 @@ function Dashboard() {
   );
 }
 
+// ── AUTH: Supabase email + password + TOTP (Google Authenticator) ─────────────
+
 function LoginScreen({onLogin}) {
-  const [pw, setPw] = React.useState("");
-  const [err, setErr] = React.useState(false);
-  const submit = () => {
-    if (pw === PASSWORD) { sessionStorage.setItem(SESSION_KEY, "1"); onLogin(); }
-    else { setErr(true); setTimeout(()=>setErr(false), 1200); }
+  const [step,    setStep]  = React.useState("login");
+  const [email,   setEmail] = React.useState("");
+  const [pass,    setPass]  = React.useState("");
+  const [code,    setCode]  = React.useState("");
+  const [qr,      setQr]    = React.useState("");
+  const [secret,  setSecret]= React.useState("");
+  const [factorId,setFId]   = React.useState("");
+  const [err,     setErr]   = React.useState("");
+  const [loading, setLoad]  = React.useState(false);
+
+  const showErr = (msg) => { setErr(msg); setTimeout(()=>setErr(""),4000); };
+
+  const doLogin = async () => {
+    setLoad(true); setErr("");
+    if (!supabase) { showErr("Auth not configured — contact Targetflow"); setLoad(false); return; }
+    // Check email whitelist before even attempting login
+    if (!ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(email.toLowerCase())) {
+      showErr("You don't have access to this dashboard"); setLoad(false); return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) { showErr(error.message); setLoad(false); return; }
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+      setStep("verify"); setLoad(false); return;
+    }
+    if (aal.nextLevel !== "aal2") {
+      const { data: ex } = await supabase.auth.mfa.listFactors();
+      for (const f of (ex?.all||[]).filter(f=>f.factor_type==="totp"&&f.status==="unverified"))
+        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      const { data, error: e2 } = await supabase.auth.mfa.enroll({ factorType:"totp", friendlyName:"Targetflow" });
+      if (e2) { showErr(e2.message); setLoad(false); return; }
+      setQr(data.totp.qr_code); setSecret(data.totp.secret); setFId(data.id);
+      setStep("enroll");
+    } else { onLogin(); }
+    setLoad(false);
   };
+
+  const doEnrollVerify = async () => {
+    setLoad(true); setErr("");
+    const ch = await supabase.auth.mfa.challenge({ factorId });
+    if (ch.error) { showErr(ch.error.message); setLoad(false); return; }
+    const { error } = await supabase.auth.mfa.verify({ factorId, challengeId: ch.data.id, code });
+    if (error) { showErr("Invalid code — try again"); setLoad(false); return; }
+    // Final server-side email check after MFA
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !ALLOWED_EMAILS.map(e=>e.toLowerCase()).includes(user.email.toLowerCase())) {
+      await supabase.auth.signOut();
+      showErr("You don't have access to this dashboard"); setLoad(false); return;
+    }
+    onLogin(); setLoad(false);
+  };
+
+  const doVerify = async () => {
+    setLoad(true); setErr("");
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const totp = factors?.totp?.[0];
+    if (!totp) { showErr("No authenticator registered"); setLoad(false); return; }
+    const ch = await supabase.auth.mfa.challenge({ factorId: totp.id });
+    if (ch.error) { showErr(ch.error.message); setLoad(false); return; }
+    const { error } = await supabase.auth.mfa.verify({ factorId: totp.id, challengeId: ch.data.id, code });
+    if (error) { showErr("Invalid code — try again"); setLoad(false); return; }
+    onLogin(); setLoad(false);
+  };
+
+  const S = {width:"100%",background:"#070c17",border:"1px solid #1e2d45",borderRadius:9,
+    padding:"11px 14px",color:"#e2e8f0",fontSize:13,outline:"none",
+    fontFamily:"'DM Sans',sans-serif",marginBottom:12,boxSizing:"border-box"};
+  const inp = (val,set,type,ph) => (
+    <input type={type} value={val} onChange={e=>set(e.target.value)}
+      onKeyDown={e=>e.key==="Enter"&&(step==="login"?doLogin():step==="enroll"?doEnrollVerify():doVerify())}
+      placeholder={ph} autoComplete="off" style={S}/>
+  );
+  const btn = (lbl,fn) => (
+    <button onClick={fn} disabled={loading} style={{width:"100%",padding:"11px",
+      background:loading?"#1e2d45":ACCENT,border:"none",borderRadius:9,
+      color:loading?"#475569":"#080b12",fontWeight:700,fontSize:13,
+      cursor:loading?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+      {lbl}
+    </button>
+  );
+
   return (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#080b12",fontFamily:"'DM Sans',sans-serif"}}>
-      <div style={{width:340,padding:"40px 36px",background:"#0c1420",border:"1px solid #1e2d45",borderRadius:16,boxShadow:"0 20px 60px #000c"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",
+      minHeight:"100vh",background:"#080b12",fontFamily:"'DM Sans',sans-serif"}}>
+      <div style={{width:360,padding:"40px 36px",background:"#0c1420",
+        border:"1px solid #1e2d45",borderRadius:16,boxShadow:"0 20px 60px #000c"}}>
         <div style={{marginBottom:28,textAlign:"center"}}>
-          <img src="https://y-lehti.fi/wp-content/uploads/2024/09/logo_tf-1024x293.png" alt="Targetflow" style={{width:180,marginBottom:12,filter:"brightness(0) invert(1)"}}/>
-          <div style={{fontSize:13,color:ACCENT,fontFamily:"'DM Mono',monospace"}}>Accrease Oy</div>
+          <img src="https://y-lehti.fi/wp-content/uploads/2024/09/logo_tf-1024x293.png"
+            alt="Targetflow" style={{width:180,marginBottom:12,filter:"brightness(0) invert(1)"}}/>
+          {CLIENT_NAME&&<div style={{fontSize:13,color:ACCENT,fontFamily:"'DM Mono',monospace"}}>{CLIENT_NAME}</div>}
         </div>
-        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}
-          placeholder="Password"
-          style={{width:"100%",background:"#070c17",border:"1px solid "+(err?"#f87171":"#1e2d45"),borderRadius:9,padding:"11px 14px",color:"#e2e8f0",fontSize:13,outline:"none",fontFamily:"'DM Sans',sans-serif",marginBottom:12,boxSizing:"border-box",transition:"border-color 0.2s"}}
-        />
-        <button onClick={submit} style={{width:"100%",padding:"11px",background:ACCENT,border:"none",borderRadius:9,color:"#080b12",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-          Sign in →
-        </button>
-        {err && <div style={{marginTop:10,textAlign:"center",fontSize:12,color:"#f87171",fontFamily:"'DM Mono',monospace"}}>Incorrect password</div>}
+
+        {step==="login"&&<>
+          {inp(email,setEmail,"email","Email address")}
+          {inp(pass,setPass,"password","Password")}
+          {btn(loading?"Signing in…":"Sign in →",doLogin)}
+          <div style={{marginTop:14,textAlign:"center"}}>
+            <span onClick={async()=>{
+              if(!email){showErr("Enter your email address first");return;}
+              const{error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});
+              error?showErr(error.message):setErr("✓ Reset link sent — check your email");
+            }} style={{fontSize:11,color:"#475569",cursor:"pointer",
+              fontFamily:"'DM Mono',monospace",textDecoration:"underline"}}>Forgot password?</span>
+          </div>
+        </>}
+
+        {step==="enroll"&&<>
+          <div style={{fontSize:12,color:"#94a3b8",marginBottom:16,lineHeight:1.7}}>
+            <strong style={{color:"#e2e8f0",display:"block",marginBottom:6}}>One-time setup: Google Authenticator</strong>
+            1. Open <strong style={{color:ACCENT}}>Google Authenticator</strong> on your phone<br/>
+            2. Tap <strong style={{color:ACCENT}}>+</strong> → <strong style={{color:ACCENT}}>Scan a QR code</strong><br/>
+            3. Enter the 6-digit code that appears
+          </div>
+          {qr&&<div style={{textAlign:"center",marginBottom:16}}>
+            <img src={`data:image/svg+xml;utf8,${encodeURIComponent(qr)}`}
+              style={{width:180,height:180,borderRadius:8,background:"#fff",padding:8,display:"inline-block"}}/>
+            <div style={{fontSize:10,color:"#334155",fontFamily:"'DM Mono',monospace",
+              marginTop:8,wordBreak:"break-all",padding:"0 4px"}}>
+              Manual key: <span style={{color:"#475569"}}>{secret}</span>
+            </div>
+          </div>}
+          {inp(code,setCode,"text","6-digit code from app")}
+          {btn(loading?"Verifying…":"Activate & enter →",doEnrollVerify)}
+        </>}
+
+        {step==="verify"&&<>
+          <div style={{fontSize:12,color:"#94a3b8",marginBottom:20,lineHeight:1.7,textAlign:"center"}}>
+            Open <strong style={{color:"#e2e8f0"}}>Google Authenticator</strong><br/>
+            and enter the code for <strong style={{color:ACCENT}}>Targetflow</strong>
+          </div>
+          {inp(code,setCode,"text","6-digit code")}
+          {btn(loading?"Verifying…":"Verify →",doVerify)}
+          <div style={{marginTop:12,textAlign:"center"}}>
+            <span onClick={()=>{setStep("login");setCode("");setErr("");}}
+              style={{fontSize:11,color:"#334155",cursor:"pointer",fontFamily:"'DM Mono',monospace"}}>
+              ← Back
+            </span>
+          </div>
+        </>}
+
+        {err&&<div style={{marginTop:12,textAlign:"center",fontSize:12,lineHeight:1.5,
+          color:err.startsWith("✓")?"#4ade80":"#f87171",fontFamily:"'DM Mono',monospace"}}>{err}</div>}
       </div>
     </div>
   );
 }
 
 function AppWithAuth() {
-  const [authed, setAuthed] = React.useState(!!sessionStorage.getItem(SESSION_KEY));
-  if (!authed) return <LoginScreen onLogin={()=>setAuthed(true)}/>;
+  const [authed,  setAuthed]  = React.useState(false);
+  const [checked, setChecked] = React.useState(false);
+
+  React.useEffect(()=>{
+    if(!supabase){ setChecked(true); return; }
+    supabase.auth.getSession().then(async({data:{session}})=>{
+      if(session){
+        const{data:aal}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if(aal.currentLevel==="aal2") setAuthed(true);
+      }
+      setChecked(true);
+    });
+    const{data:sub}=supabase.auth.onAuthStateChange((_,session)=>{
+      if(!session) setAuthed(false);
+    });
+    return ()=>sub.subscription.unsubscribe();
+  },[]);
+
+  if(!checked) return(
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",
+      minHeight:"100vh",background:"#080b12"}}>
+      <div style={{color:"#1e2d45",fontSize:20}}>●</div>
+    </div>
+  );
+  if(!authed) return <LoginScreen onLogin={()=>setAuthed(true)}/>;
   return <Dashboard/>;
 }
 
