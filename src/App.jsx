@@ -3037,22 +3037,26 @@ function MfaScreen({onVerified}) {
 }
 
 function AppWithAuth() {
-  const [stage,   setStage]   = React.useState("loading"); // loading | login | mfa | done
+  const [stage,   setStage]   = React.useState("loading"); // loading | login | mfa | denied | done
+
+  const checkAndAdvance = async (session) => {
+    if(!session){ setStage("login"); return; }
+    // Email whitelist check
+    const email = session.user?.email||"";
+    if(!ALLOWED_EMAILS.includes(email)){
+      await supabase.auth.signOut();
+      setStage("denied");
+      return;
+    }
+    const{data:aal}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(aal.nextLevel==="aal2"&&aal.currentLevel!=="aal2") setStage("mfa");
+    else setStage("done");
+  };
 
   React.useEffect(()=>{
     if(!supabase){ setStage("login"); return; }
-    supabase.auth.getSession().then(async({data:{session}})=>{
-      if(!session){ setStage("login"); return; }
-      const{data:aal}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if(aal.nextLevel==="aal2"&&aal.currentLevel!=="aal2") setStage("mfa");
-      else setStage("done");
-    });
-    const{data:sub}=supabase.auth.onAuthStateChange(async(_,session)=>{
-      if(!session){ setStage("login"); return; }
-      const{data:aal}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if(aal.nextLevel==="aal2"&&aal.currentLevel!=="aal2") setStage("mfa");
-      else setStage("done");
-    });
+    supabase.auth.getSession().then(({data:{session}})=>checkAndAdvance(session));
+    const{data:sub}=supabase.auth.onAuthStateChange((_,session)=>checkAndAdvance(session));
     return ()=>sub.subscription.unsubscribe();
   },[]);
 
@@ -3061,7 +3065,17 @@ function AppWithAuth() {
       <div style={{color:"#1e2d45",fontSize:20}}>●</div>
     </div>
   );
-  if(stage==="login")  return <LoginScreen onLogin={()=>{}} />;
+  if(stage==="denied") return(
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#080b12"}}>
+      <div style={{background:"#0c1420",border:"1px solid #f8717133",borderRadius:16,padding:"40px 36px",textAlign:"center",maxWidth:360}}>
+        <div style={{fontSize:28,marginBottom:16}}>🚫</div>
+        <div style={{fontSize:16,fontWeight:700,color:"#f87171",marginBottom:8}}>Access denied</div>
+        <div style={{fontSize:12,color:"#64748b",marginBottom:24}}>Your account is not authorised for this dashboard.</div>
+        <button onClick={()=>setStage("login")} style={{padding:"10px 24px",borderRadius:9,background:"#0c1420",border:"1px solid #1e2d45",color:"#94a3b8",fontSize:12,cursor:"pointer"}}>Back to login</button>
+      </div>
+    </div>
+  );
+  if(stage==="login")  return <LoginScreen onLogin={()=>setStage("done")} />;
   if(stage==="mfa")    return <MfaScreen onVerified={()=>setStage("done")} />;
   return <Dashboard/>;
 }
