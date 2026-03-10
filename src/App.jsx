@@ -1757,7 +1757,7 @@ function LoginScreen({onLogin}) {
         await supabase.auth.mfa.unenroll({ factorId: f.id });
       const { data, error: e2 } = await supabase.auth.mfa.enroll({ factorType:"totp", friendlyName:"Targetflow" });
       if (e2) { showErr(e2.message); setLoad(false); return; }
-      setQr(data.totp.qr_code); setSecret(data.totp.secret); setFId(data.id);
+      setSecret(data.totp.secret); setFId(data.id);
       setStep("enroll");
     } else { onLogin(); }
     setLoad(false);
@@ -1839,9 +1839,10 @@ function LoginScreen({onLogin}) {
             2. Tap <strong style={{color:ACCENT}}>+</strong> → <strong style={{color:ACCENT}}>Scan a QR code</strong><br/>
             3. Enter the 6-digit code that appears
           </div>
-          {qr&&<div style={{textAlign:"center",marginBottom:16}}>
-            <img src={`data:image/svg+xml;utf8,${encodeURIComponent(qr)}`}
-              style={{width:180,height:180,borderRadius:8,background:"#fff",padding:8,display:"inline-block"}}/>
+          {secret&&<div style={{textAlign:"center",marginBottom:16}}>
+            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`otpauth://totp/Targetflow:${email}?secret=${secret}&issuer=Targetflow`)}`}
+              style={{width:180,height:180,borderRadius:8,background:"#fff",padding:8,display:"inline-block"}}
+              alt="QR Code"/>
             <div style={{fontSize:10,color:"#334155",fontFamily:"'DM Mono',monospace",
               marginTop:8,wordBreak:"break-all",padding:"0 4px"}}>
               Manual key: <span style={{color:"#475569"}}>{secret}</span>
