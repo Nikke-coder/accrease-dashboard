@@ -3056,9 +3056,11 @@ function AppWithAuth() {
 
   React.useEffect(()=>{
     if(!supabase){ setStage("login"); return; }
-    advance();
-    const {data:sub} = supabase.auth.onAuthStateChange(()=>advance());
-    return ()=>sub.subscription.unsubscribe();
+    let cancelled = false;
+    const run = async () => { if(!cancelled) await advance(); };
+    run();
+    const {data:sub} = supabase.auth.onAuthStateChange(()=>{ if(!cancelled) advance(); });
+    return ()=>{ cancelled=true; sub.subscription.unsubscribe(); };
   },[advance]);
 
   if(stage==="loading") return <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#080b12"}}><div style={{color:"#1e2d45",fontSize:20}}>●</div></div>;
