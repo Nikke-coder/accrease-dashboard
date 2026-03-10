@@ -2987,17 +2987,19 @@ function MfaScreen({onVerified}) {
   const verify = async () => {
     if(loading||code.length<6) return;
     setLoading(true);
-    const {data:factors} = await supabase.auth.mfa.listFactors();
-    const totp = factors?.totp?.[0];
-    if(!totp){ setErr(true); setLoading(false); return; }
-    const {data:challenge} = await supabase.auth.mfa.challenge({factorId: totp.id});
-    const {error} = await supabase.auth.mfa.verify({
-      factorId: totp.id,
-      challengeId: challenge.id,
-      code: code.trim()
-    });
-    if(error){ setErr(true); setLoading(false); setTimeout(()=>setErr(false),1400); }
-    else { onVerified(); }
+    try {
+      const {data:factors} = await supabase.auth.mfa.listFactors();
+      const totp = factors?.totp?.[0];
+      if(!totp){ setErr(true); setLoading(false); return; }
+      const {data:challenge} = await supabase.auth.mfa.challenge({factorId: totp.id});
+      const {error} = await supabase.auth.mfa.verify({
+        factorId: totp.id,
+        challengeId: challenge.id,
+        code: code.trim()
+      });
+      if(error){ setErr(true); setLoading(false); setTimeout(()=>setErr(false),1400); }
+      else { setTimeout(()=>onVerified(), 500); }
+    } catch(e) { setErr(true); setLoading(false); }
   };
 
   return (
@@ -3031,9 +3033,9 @@ function MfaScreen({onVerified}) {
 }
 
 function AppWithAuth() {
-  const [stage, setStage] = React.useState("loading");
+  const [stage, setStage] = React.useState("login");
 
-  const advance = React.useCallback(async () => {
+  const goIn = async () => {
     try {
       const {data:{session}} = await supabase.auth.getSession();
       if(!session){ setStage("login"); return; }
@@ -3042,29 +3044,13 @@ function AppWithAuth() {
         await supabase.auth.signOut();
         setStage("denied"); return;
       }
-      try {
-        const {data:aal} = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if(aal?.nextLevel==="aal2" && aal?.currentLevel!=="aal2") setStage("mfa");
-        else setStage("done");
-      } catch(e) {
-        setStage("done");
-      }
-    } catch(e) {
-      setStage("login");
-    }
-  }, []);
+      const {data:aal} = await supabase.auth.mfa.getAuthenticatorAssuranceLevel().catch(()=>({data:null}));
+      if(aal?.nextLevel==="aal2" && aal?.currentLevel!=="aal2") setStage("mfa");
+      else setStage("done");
+    } catch(e) { setStage("login"); }
+  };
 
-  React.useEffect(()=>{
-    if(!supabase){ setStage("login"); return; }
-    let cancelled = false;
-    const run = async () => { if(!cancelled) await advance(); };
-    run();
-    const {data:sub} = supabase.auth.onAuthStateChange(()=>{ if(!cancelled) advance(); });
-    return ()=>{ cancelled=true; sub.subscription.unsubscribe(); };
-  },[advance]);
-
-  if(stage==="loading") return <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#080b12"}}><div style={{color:"#1e2d45",fontSize:20}}>●</div></div>;
-  if(stage==="denied")  return (
+  if(stage==="denied") return (
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:"#080b12"}}>
       <div style={{background:"#0c1420",border:"1px solid #f8717133",borderRadius:16,padding:"40px 36px",textAlign:"center",maxWidth:360}}>
         <div style={{fontSize:28,marginBottom:16}}>🚫</div>
@@ -3074,9 +3060,9 @@ function AppWithAuth() {
       </div>
     </div>
   );
-  if(stage==="login") return <LoginScreen onLogin={advance} />;
-  if(stage==="mfa")   return <MfaScreen onVerified={advance} />;
-  return <Dashboard/>;
+  if(stage==="mfa")   return <MfaScreen onVerified={goIn} />;
+  if(stage==="done")  return <Dashboard/>;
+  return <LoginScreen onLogin={goIn} />;
 }
 
 export default AppWithAuth;
