@@ -2985,17 +2985,12 @@ function AppWithAuth() {
 
   React.useEffect(()=>{
     if(!supabase){ setChecked(true); return; }
-    supabase.auth.getSession().then(async({data:{session}})=>{
-      if(session){
-        const{data:aal}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if(aal.currentLevel==="aal2"||aal.currentLevel==="aal1") setAuthed(true);
-      }
+    supabase.auth.getSession().then(({data:{session}})=>{
+      if(session) setAuthed(true);
       setChecked(true);
     });
-    const{data:sub}=supabase.auth.onAuthStateChange(async(_,session)=>{
-      if(!session){ setAuthed(false); return; }
-      const{data:aal}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if(aal.currentLevel==="aal2"||aal.currentLevel==="aal1") setAuthed(true);
+    const{data:sub}=supabase.auth.onAuthStateChange((_,session)=>{
+      if(session) setAuthed(true);
       else setAuthed(false);
     });
     return ()=>sub.subscription.unsubscribe();
