@@ -3034,16 +3034,24 @@ function AppWithAuth() {
   const [stage, setStage] = React.useState("loading");
 
   const advance = React.useCallback(async () => {
-    const {data:{session}} = await supabase.auth.getSession();
-    if(!session){ setStage("login"); return; }
-    const email = session.user?.email||"";
-    if(!ALLOWED_EMAILS.includes(email)){
-      await supabase.auth.signOut();
-      setStage("denied"); return;
+    try {
+      const {data:{session}} = await supabase.auth.getSession();
+      if(!session){ setStage("login"); return; }
+      const email = session.user?.email||"";
+      if(!ALLOWED_EMAILS.includes(email)){
+        await supabase.auth.signOut();
+        setStage("denied"); return;
+      }
+      try {
+        const {data:aal} = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if(aal?.nextLevel==="aal2" && aal?.currentLevel!=="aal2") setStage("mfa");
+        else setStage("done");
+      } catch(e) {
+        setStage("done");
+      }
+    } catch(e) {
+      setStage("login");
     }
-    const {data:aal} = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if(aal.nextLevel==="aal2" && aal.currentLevel!=="aal2") setStage("mfa");
-    else setStage("done");
   }, []);
 
   React.useEffect(()=>{
