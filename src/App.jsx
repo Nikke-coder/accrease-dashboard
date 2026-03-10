@@ -2837,14 +2837,8 @@ function LoginScreen({onLogin}) {
     if (error) {
       setLoading(false); setErr(true); setTimeout(() => setErr(false), 1400);
     } else {
-      // Check MFA
-      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aal.nextLevel === "aal2" && aal.nextLevel !== aal.currentLevel) {
-        // Need MFA — handled by onAuthStateChange in AppWithAuth
-        setLoading(false);
-      } else {
-        setSuccess(true); setTimeout(() => onLogin(), 600);
-      }
+      setSuccess(true);
+      setTimeout(() => onLogin(), 600);
     }
   };
 
@@ -3075,7 +3069,7 @@ function AppWithAuth() {
       </div>
     </div>
   );
-  if(stage==="login")  return <LoginScreen onLogin={()=>setStage("done")} />;
+  if(stage==="login")  return <LoginScreen onLogin={async()=>{ const{data:{session}}=await supabase.auth.getSession(); checkAndAdvance(session); }} />;
   if(stage==="mfa")    return <MfaScreen onVerified={()=>setStage("done")} />;
   return <Dashboard/>;
 }
