@@ -2014,6 +2014,11 @@ function CommentsPanel({supabase, clientName, userName, enabled}) {
 }
 
 function Dashboard() {
+  const [userEmail,   setUserEmail]  = useState("");
+  React.useEffect(()=>{
+    if(supabase) supabase.auth.getUser().then(({data})=>{ if(data?.user?.email) setUserEmail(data.user.email); });
+  },[]);
+
   const [tab,         setTab]        = useState("group");
   const [year,        setYear]       = useState("2025");
   const [mode,        setMode]       = useState("budget");
