@@ -2824,13 +2824,22 @@ function LoginScreen({onLogin}) {
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
   }, []);
 
-  const submit = () => {
+  const submit = async () => {
     if (loading || success) return;
-    if (user === USERNAME && pw === PASSWORD) {
-      setLoading(true);
-      setTimeout(() => { setSuccess(true); setTimeout(() => { sessionStorage.setItem(SESSION_KEY, "1"); onLogin(); }, 600); }, 800);
+    if (!user || !pw) { setErr(true); setTimeout(() => setErr(false), 1400); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: user, password: pw });
+    if (error) {
+      setLoading(false); setErr(true); setTimeout(() => setErr(false), 1400);
     } else {
-      setErr(true); setTimeout(() => setErr(false), 1400);
+      // Check MFA
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal.nextLevel === "aal2" && aal.nextLevel !== aal.currentLevel) {
+        // Need MFA — handled by onAuthStateChange in AppWithAuth
+        setLoading(false);
+      } else {
+        setSuccess(true); setTimeout(() => onLogin(), 600);
+      }
     }
   };
 
@@ -2905,7 +2914,7 @@ function LoginScreen({onLogin}) {
             <div style={{fontSize:10,color:"rgba(100,116,139,0.8)",fontFamily:"'DM Mono',monospace",
               textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>Username</div>
             <input type="text" value={user} onChange={e=>setUser(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Enter username"
+              onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Email address"
               onFocus={()=>setFocused("user")} onBlur={()=>setFocused(null)}
               autoComplete="off" style={inputStyle("user")}/>
           </div>
