@@ -1,5 +1,15 @@
 import React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+
+function useWindowWidth() {
+  const [w, setW] = useState(window.innerWidth);
+  useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return w;
+}
 import { supabase } from './supabase.js';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
@@ -14,6 +24,13 @@ const STYLE = `
   .yr-btn{background:none;border:1px solid #1e2d45;border-radius:6px;padding:4px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:#64748b;transition:all 0.18s;}
   .yr-btn:hover{border-color:#3b82f6;color:#93c5fd;}
   .yr-btn.active{background:#1e3a5f;border-color:#3b82f6;color:#60a5fa;}
+  @media(max-width:767px){
+    .tf-grid-3{grid-template-columns:1fr 1fr!important;}
+    .tf-grid-4{grid-template-columns:1fr 1fr!important;}
+    .tf-grid-5{grid-template-columns:1fr 1fr!important;}
+    .tf-hide-mobile{display:none!important;}
+    .tf-yr-btns{display:none!important;}
+  }
   .mode-btn{padding:6px 14px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all 0.18s;}
   .upload-zone{border:2px dashed #1e3a5f;border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;}
   .upload-zone:hover{border-color:#3b82f6;background:#0c1e35;}
@@ -303,7 +320,7 @@ const PeriodBar = ({startM,endM,setStart,setEnd,compLabel,actLast}) => (
   </div>
 );
 
-function AiAssistant({financialContext}) {
+function AiAssistant({financialContext, isMobile=false, sidebarOpen=true, setSidebarOpen=()=>{}}) {
   const [messages, setMessages] = useState([]);
   const [input,    setInput]    = useState("");
   const [loading,  setLoading]  = useState(false);
@@ -431,7 +448,23 @@ Current financial data (${financialContext.period}, ${financialContext.year}):
   React.useEffect(()=>{ boot(); },[]);
 
   return (
-    <div style={{position:"fixed",top:0,right:0,width:320,height:"100vh",
+    <>
+      {isMobile && (
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          style={{
+            position:"fixed", bottom:20, right:20, zIndex:600,
+            width:48, height:48, borderRadius:"50%",
+            background:"linear-gradient(135deg,#1d4ed8,#0ea5e9)",
+            border:"none", cursor:"pointer", fontSize:18,
+            boxShadow:"0 4px 20px rgba(29,78,216,0.5)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>
+          {sidebarOpen ? "✕" : "🤖"}
+        </button>
+      )}
+      {(!isMobile || sidebarOpen) && (
+    <div style={{position:"fixed",top:0,right:0,width:isMobile?"100vw":320,height:"100vh",
       display:"flex",flexDirection:"column",background:"#060a14",
       borderLeft:"1px solid #0f1e30",zIndex:500}}>
 
@@ -445,6 +478,9 @@ Current financial data (${financialContext.period}, ${financialContext.year}):
           </div>
         </div>
         {usage>0&&<div style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#334155"}}>{usage}/{MONTHLY_CAP}</div>}
+        {isMobile && (
+          <button onClick={()=>setSidebarOpen(false)} style={{background:"none",border:"none",color:"#64748b",fontSize:18,cursor:"pointer",padding:"4px 8px"}}>✕</button>
+        )}
       </div>
 
       {/* Messages */}
@@ -508,6 +544,8 @@ Current financial data (${financialContext.period}, ${financialContext.year}):
       </div>
 
     </div>
+      )}
+    </>
   );
 }
 
@@ -1459,7 +1497,7 @@ function ForecastTab({actuals,comp,compLabel,mode,setMode,S,E,fcRevData,fcEqData
           <div style={{fontSize:13,fontWeight:600,color:"#94a3b8"}}>ACT + {compLabel} Performance</div>
           <ModeSwitcher mode={mode} setMode={setMode} compLabel={compLabel}/>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:16}}>
+        <div className="tf-grid-3" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:16}}>
           {[
             {label:"Revenue ACT",    val:sum(sl(actuals.revenue,S,E)),   comp:sum(sl(comp.revenue||[],S,E)),              color:BLUE},
             {label:"EBITDA ACT",     val:sum(sl(actuals.ebitda,S,E)),    comp:sum(sl(comp.ebitda||Array(12).fill(0),S,E)),color:AMBER},
@@ -1683,7 +1721,7 @@ function PLTab({actuals,comp,compLabel,mode,setMode,S,E,visMonths,monthTypes,plR
       </div>
 
       {/* KPI cards */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+      <div className="tf-grid-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
         {[
           {l:"Revenue",     v:totRev,  c:cRev,  color:BLUE,  pct:null},
           {l:"Gross Margin",v:+gmPct,  c:null,  color:CYAN,  pct:true, unit:"%"},
@@ -1788,7 +1826,7 @@ function BalanceTab({actuals,comp,compLabel,mode,setMode,S,E,visMonths,monthType
       </div>
 
       {/* KPI cards */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+      <div className="tf-grid-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
         {[
           {l:"Total Assets",   v:endAss,  color:BLUE,  sub:"End of period"},
           {l:"Total Equity",   v:endEq,   color:GREEN, sub:"Shareholders"},
@@ -2396,7 +2434,7 @@ function Dashboard() {
     <div style={{minHeight:"100vh",background:"#080b12",color:"#e2e8f0",fontFamily:"'DM Sans',sans-serif"}}>
       <style>{STYLE}</style>
 
-      <div style={{borderBottom:"1px solid #0c1829",padding:"0 32px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,marginRight:320}}>
+      <div style={{borderBottom:"1px solid #0c1829",padding:isMobile?"0 16px":"0 32px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,marginRight:isMobile?0:320}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:28,height:28,background:"linear-gradient(135deg,#1d4ed8,#0ea5e9)",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center"}}>
             <span style={{fontSize:10,fontWeight:700,color:"#fff",fontFamily:"'DM Mono',monospace"}}>TF</span>
@@ -2407,11 +2445,14 @@ function Dashboard() {
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{display:"flex",gap:6}}>
+          <div className="tf-yr-btns" style={{display:"flex",gap:6}}>
             {["2023","2024","2025","2026"].map(y=>(
               <button key={y} className={"yr-btn"+(year===y?" active":"")} onClick={()=>setYear(y)}>{y}</button>
             ))}
           </div>
+          {isMobile && (
+            <button onClick={()=>setSidebarOpen(o=>!o)} style={{background:"linear-gradient(135deg,#1d4ed8,#0ea5e9)",border:"none",borderRadius:8,padding:"6px 10px",color:"#fff",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:700,cursor:"pointer"}}>E9K</button>
+          )}
           <CommentsPanel
             supabase={supabase}
             clientName="Accrease Oy"
@@ -2422,7 +2463,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div style={{borderBottom:"1px solid #0c1829",padding:"0 32px",display:"flex",gap:0,overflowX:"auto",marginRight:320}}>
+      <div style={{borderBottom:"1px solid #0c1829",padding:"0 32px",display:"flex",gap:0,overflowX:"auto",marginRight:isMobile?0:320}}>
         {TABS.map(t=>(
           <button key={t.id} className="tab-btn" onClick={()=>setTab(t.id)} style={{padding:"12px 16px",fontSize:12,fontWeight:tab===t.id?600:400,color:tab===t.id?"#60a5fa":"#475569",borderBottom:tab===t.id?"2px solid #3b82f6":"2px solid transparent",marginBottom:-1,whiteSpace:"nowrap"}}>
             {t.label}
@@ -2433,7 +2474,7 @@ function Dashboard() {
       <div style={{marginRight:320}}><PeriodBar startM={S} endM={E} setStart={setStartM} setEnd={setEndM} compLabel={compLabel} actLast={actLast}/></div>
 
       {isGroup&&!["group","data","deadlines"].includes(tab)&&(
-        <div style={{borderTop:"1px solid #0c1829",background:"#060a14",padding:"8px 32px",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap",marginRight:320}}>
+        <div style={{borderTop:"1px solid #0c1829",background:"#060a14",padding:"8px 32px",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap",marginRight:isMobile?0:320}}>
           <span style={{fontSize:10,color:SLATE,fontFamily:"'DM Mono',monospace"}}>VIEWING</span>
           <button onClick={()=>setActiveEntity(null)} style={{padding:"4px 12px",borderRadius:6,fontFamily:"'DM Mono',monospace",fontSize:10,cursor:"pointer",border:"1px solid "+(activeEntity===null?"#3b82f6":"#1e2d45"),background:activeEntity===null?"#1e3a5f":"transparent",color:activeEntity===null?"#60a5fa":SLATE}}>Consolidated</button>
           {entities.map(ent=>(
@@ -2445,7 +2486,7 @@ function Dashboard() {
         </div>
       )}
 
-      <div style={{padding:"22px 32px 22px 32px",marginRight:320}}>
+      <div style={{padding:isMobile?"16px 16px":"22px 32px",marginRight:isMobile?0:320}}>
 
         {tab==="group"&&(
           <GroupStructureTab entities={entities} selectedEnt={selectedEnt} setSelectedEnt={setSelectedEnt} editingEnt={editingEnt} setEditingEnt={setEditingEnt} isGroup={isGroup} addEntity={addEntity} updateEntity={updateEntity} removeEntity={removeEntity}/>
@@ -2455,7 +2496,7 @@ function Dashboard() {
           <div style={{display:"flex",flexDirection:"column",gap:24}}>
             <div>
               <SecTitle c="Profitability"/>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
+              <div className="tf-grid-3" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
                 <Gauge label="Gross Margin"  value={gmPct}  unit="%" target={65} targetLabel="Target" color={CYAN}   desc="(Revenue − COGS) / Revenue"/>
                 <Gauge label="EBIT Margin"   value={emPct}  unit="%" target={15} targetLabel="Target" color={BLUE}   desc="EBIT / Revenue"/>
                 <Gauge label="ROE"           value={roePct} unit="%" target={12} targetLabel="Min"    color={PURPLE} desc="Net Profit / Equity"/>
@@ -2476,7 +2517,7 @@ function Dashboard() {
             </div>
             <div>
               <SecTitle c="Sustainability"/>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
+              <div className="tf-grid-3" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
                 <Gauge label="Equity Ratio"      value={eqR}   unit="%" target={40} targetLabel="Min" color={GREEN} desc="Equity / Total Capital"/>
                 <Gauge label="Gearing Ratio"     value={gear}  unit="%" target={80} targetLabel="Max" color={AMBER} desc="Debt / Equity · lower is better" flip={true}/>
                 <Gauge label="Interest Coverage" value={intCov} unit="x" target={3}  targetLabel="Min" color={CYAN}  desc="EBIT / Finance costs"/>
@@ -2512,7 +2553,7 @@ function Dashboard() {
             </div>
             <div>
               <SecTitle c="Efficiency"/>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
+              <div className="tf-grid-3" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:14}}>
                 <Gauge label="DSO (AR days)"  value={dso} unit=" days" target={45} targetLabel="Max" color={CYAN}   desc="Receivables / (Revenue/365)" flip={true}/>
                 <Gauge label="DIO (Inv days)" value={dio} unit=" days" target={60} targetLabel="Max" color={PURPLE} desc="Inventory / (Revenue/365)" flip={true}/>
                 <Gauge label="DPO (AP days)"  value={dpo} unit=" days" target={30} targetLabel="Min" color={AMBER}  desc="Payables / (Revenue/365)"/>
@@ -2552,7 +2593,7 @@ function Dashboard() {
 
         {tab==="cashflow"&&(
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14}}>
+            <div className="tf-grid-5" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:14}}>
               {[
                 {l:"Operative CF",  v:totOp,                   c:totOp>=0?GREEN:RED},
                 {l:"Investment CF", v:totInv,                  c:totInv>=0?GREEN:RED},
@@ -2668,7 +2709,7 @@ function Dashboard() {
         equity:      fmt(endEq),
         cash:        fmt(actuals.cash[E]||0),
         gmPct, emPct, roePct, eqR, gear, intCov, dso, dio, dpo,
-      }}/>
+      }} isMobile={isMobile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}/>
 
 
     </div>
