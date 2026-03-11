@@ -55,6 +55,13 @@ const ALLOWED_EMAILS = ['lukas.paulikas@accrease.com', "niklas.isaksson@targetfl
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const BLUE="#3b82f6",GREEN="#22c55e",AMBER="#f59e0b",RED="#f87171",PURPLE="#a78bfa",CYAN="#06b6d4",SLATE="#64748b";
 const ACT_LAST_DEFAULT = 11;
+// Per-year last confirmed ACT month (0=Jan…11=Dec, -1=full BUD)
+const ACT_LAST_BY_YEAR = {
+  "2023": 11,
+  "2024": 11,
+  "2025": 11,
+  "2026": -1,
+};
 
 const actBase = {
   revenue:     [-10982,-15604,-26301,-20942,-12228,-15481,-3768,-18782,-20041,-22898,-15102,-15995].map(v=>Math.abs(v)),
@@ -255,10 +262,11 @@ const TblHead = ({visMonths,monthTypes,totalLabel,stickyBg}) => {
   );
 };
 
-const TblRow = ({label,actArr,compArr,color,bold,indent,s,e}) => {
+const TblRow = ({label,actArr,compArr,color,bold,indent,s,e,monthTypes}) => {
   const aSlice = sl(actArr,s,e);
   const cSlice = compArr?sl(compArr,s,e):null;
-  const totA   = sum(aSlice);
+  const mTypes = monthTypes||aSlice.map(()=>"ACT");
+  const totA   = sum(aSlice.filter((_,i)=>mTypes[i]==="ACT"));
   const totC   = cSlice?sum(cSlice):null;
   const totV   = totC!==null?totA-totC:null;
   return (
@@ -266,8 +274,9 @@ const TblRow = ({label,actArr,compArr,color,bold,indent,s,e}) => {
       <td style={{padding:"7px 20px",color,fontWeight:bold?600:400,fontSize:bold?12:11,paddingLeft:indent?32:20,position:"sticky",left:0,background:"#0c1420",zIndex:1}}>{label}</td>
       {aSlice.map((av,i) => {
         const cv = cSlice?cSlice[i]:null;
+        const isAct = mTypes[i]==="ACT";
         return [
-          <td key={"a"+i} style={{padding:"7px 8px",textAlign:"right",color,fontWeight:bold?600:400,fontSize:11,fontFamily:"'DM Mono',monospace",whiteSpace:"nowrap"}}>{fmt(av)}</td>,
+          <td key={"a"+i} style={{padding:"7px 8px",textAlign:"right",color:isAct?color:"#1e2d45",fontWeight:bold?600:400,fontSize:11,fontFamily:"'DM Mono',monospace",whiteSpace:"nowrap"}}>{isAct?fmt(av):"—"}</td>,
           <td key={"c"+i} style={{padding:"7px 8px",textAlign:"right",color:cv!==null?AMBER:SLATE,fontSize:11,fontFamily:"'DM Mono',monospace",whiteSpace:"nowrap"}}>{cv!==null?fmt(cv):"—"}</td>,
         ];
       })}
@@ -1232,7 +1241,7 @@ function SettingsMenu({actData,actName,actLast,setActData,setActName,setActLast,
                 ].map(t=>{
                   const active = t.id==="actuals" ? uploadType==="actuals" : uploadType===t.id;
                   return (
-                    <button key={t.id} onClick={()=>{ setUploadType(t.id); if(t.id!=="actuals") setMode(t.id==="budget"?"budget":"forecast"); }}
+                    <button key={t.id} onClick={()=>{ setUploadType(t.id); }}
                       style={{padding:"4px 10px",borderRadius:6,fontSize:10,fontFamily:"'DM Mono',monospace",
                         cursor:"pointer",border:"none",
                         background:active?t.color+"22":"transparent",
@@ -1380,6 +1389,59 @@ function SettingsMenu({actData,actName,actLast,setActData,setActName,setActLast,
               </div>}
             </div>
           )}
+          {/* ── API Sync placeholder ── */}
+          <div style={{borderTop:"1px solid #0f1e30",padding:"12px 20px"}}>
+            <div style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#475569",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10}}>Accounting System</div>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {[
+                {id:"procountor", label:"Procountor", color:"#6366f1", logo:"P", note:"REST API · OAuth2"},
+                {id:"netvisor",   label:"Netvisor",   color:"#0ea5e9", logo:"N", note:"SOAP/REST API"},
+              ].map(src => (
+                <div key={src.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",
+                  padding:"10px 14px",borderRadius:9,border:"1px solid #1e2d45",background:"#070c17"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:28,height:28,borderRadius:7,background:src.color+"22",border:"1px solid "+src.color+"44",
+                      display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,
+                      color:src.color,fontFamily:"'DM Mono',monospace"}}>{src.logo}</div>
+                    <div>
+                      <div style={{fontSize:11,fontWeight:600,color:"#64748b"}}>{src.label}</div>
+                      <div style={{fontSize:9,color:"#334155",fontFamily:"'DM Mono',monospace"}}>{src.note}</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#fbbf24",background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.15)",borderRadius:5,padding:"2px 7px"}}>Soon</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Export section ── */}
+          <div style={{borderTop:"1px solid #0f1e30",padding:"12px 20px"}}>
+            <div style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#475569",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10}}>Export Dashboard</div>
+            <div style={{display:"flex",gap:8}}>
+              <button
+                onClick={()=>window._tfExport&&window._tfExport('pdf')}
+                style={{flex:1,padding:"9px 12px",borderRadius:8,border:"1px solid #1e2d45",background:"#070c17",
+                  color:"#94a3b8",fontSize:11,fontFamily:"'DM Mono',monospace",cursor:"pointer",
+                  display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="#3b82f6";e.currentTarget.style.color="#60a5fa";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="#1e2d45";e.currentTarget.style.color="#94a3b8";}}>
+                📄 PDF
+              </button>
+              <button
+                onClick={()=>window._tfExport&&window._tfExport('ppt')}
+                style={{flex:1,padding:"9px 12px",borderRadius:8,border:"1px solid #1e2d45",background:"#070c17",
+                  color:"#94a3b8",fontSize:11,fontFamily:"'DM Mono',monospace",cursor:"pointer",
+                  display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all 0.15s"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="#f59e0b";e.currentTarget.style.color="#fbbf24";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="#1e2d45";e.currentTarget.style.color="#94a3b8";}}>
+                📊 PowerPoint
+              </button>
+            </div>
+            <div style={{fontSize:9,color:"#334155",fontFamily:"'DM Mono',monospace",marginTop:8,textAlign:"center"}}>
+              Full export feature being configured — coming soon
+            </div>
+          </div>
+
         </div>
       )}
     </div>
@@ -1786,7 +1848,7 @@ function PLTab({actuals,comp,compLabel,mode,setMode,S,E,visMonths,monthTypes,plR
             <TblHead visMonths={visMonths} monthTypes={monthTypes} totalLabel={MONTHS_A[S]+"–"+MONTHS_A[E]}/>
             <tbody>
               {plRows.map((r,ri)=>(
-                <TblRow key={ri} label={r.label} actArr={actuals[r.ak]||[]} compArr={r.ck?comp[r.ck]:null} color={r.color} bold={r.bold} indent={r.indent} s={S} e={E}/>
+                <TblRow key={ri} label={r.label} actArr={actuals[r.ak]||[]} compArr={r.ck?comp[r.ck]:null} color={r.color} bold={r.bold} indent={r.indent} s={S} e={E} monthTypes={monthTypes}/>
               ))}
             </tbody>
           </table>
@@ -1896,7 +1958,7 @@ function BalanceTab({actuals,comp,compLabel,mode,setMode,S,E,visMonths,monthType
                 }
                 const aArr=r.aa||(actuals[r.ak]||[]);
                 const cArr=r.ca!==undefined?r.ca:(r.ck?comp[r.ck]:null);
-                return <TblRow key={ri} label={r.label} actArr={aArr} compArr={cArr} color={r.color} bold={r.bold} indent={r.indent} s={S} e={E}/>;
+                return <TblRow key={ri} label={r.label} actArr={aArr} compArr={cArr} color={r.color} bold={r.bold} indent={r.indent} s={S} e={E} monthTypes={monthTypes}/>;
               })}
             </tbody>
           </table>
@@ -2068,6 +2130,89 @@ function Dashboard() {
   const [actData,     setActData]    = useState(null);
   const [actName,     setActName]    = useState(null);
   const [actLast,     setActLast]    = useState(ACT_LAST_DEFAULT);
+
+  // ── PDF / PPT Export ─────────────────────────────────────────────────────
+  React.useEffect(()=>{
+    const loadScript = (url) => new Promise((res,rej)=>{
+      if(document.querySelector(`script[src="${url}"]`)){ res(); return; }
+      const s=document.createElement("script"); s.src=url; s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+    window._tfExport = async (type) => {
+      const TABS_ORDER = ["group","kpis","forecast","pl","balance","cashflow","deadlines"];
+      const TAB_LABELS = {group:"Group Structure",kpis:"KPIs",forecast:"Scenario Analysis",pl:"P&L",balance:"Balance Sheet",cashflow:"Cash Flow",deadlines:"Notifications"};
+      const mainEl = document.querySelector("[data-export-main]");
+      const clientName = mainEl?.dataset?.clientName || "Dashboard";
+      const yearLabel  = mainEl?.dataset?.exportYear  || new Date().getFullYear();
+      const toast = document.createElement("div");
+      toast.style.cssText="position:fixed;bottom:24px;right:24px;background:#0c1420;border:1px solid #3b82f6;border-radius:10px;padding:12px 20px;color:#60a5fa;font-family:'DM Mono',monospace;font-size:12px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.6)";
+      toast.textContent="⏳ Preparing export…"; document.body.appendChild(toast);
+      try {
+        await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+        if(type==="pdf") await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+        if(type==="ppt") await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js");
+        if(!mainEl){ toast.textContent="❌ Export target not found"; setTimeout(()=>toast.remove(),2000); return; }
+        const captured = [];
+        const allTabBtns = Array.from(document.querySelectorAll(".tab-btn"));
+        for(const tabId of TABS_ORDER){
+          toast.textContent=`📸 Capturing ${TAB_LABELS[tabId]}…`;
+          const btn = allTabBtns.find(b=>b.textContent.trim()===TAB_LABELS[tabId]);
+          if(btn){ btn.click(); await new Promise(r=>setTimeout(r,450)); }
+          const canvas = await window.html2canvas(mainEl,{
+            backgroundColor:"#080b12",scale:1.5,useCORS:true,logging:false,
+            width:1280,height:Math.min(mainEl.scrollHeight,2800),windowWidth:1280,scrollX:0,scrollY:0
+          });
+          captured.push({label:TAB_LABELS[tabId],dataUrl:canvas.toDataURL("image/jpeg",0.90),w:canvas.width,h:canvas.height});
+        }
+        toast.textContent=`📦 Building ${type.toUpperCase()}…`;
+        await new Promise(r=>setTimeout(r,80));
+        const fname = clientName.replace(/\s+/g,"_")+"_"+yearLabel+"_Board_Report";
+        if(type==="pdf"){
+          const {jsPDF} = window.jspdf;
+          const pdf = new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+          const PW=297,PH=210;
+          captured.forEach((c,i)=>{
+            if(i>0) pdf.addPage();
+            pdf.setFillColor(8,11,18); pdf.rect(0,0,PW,PH,"F");
+            pdf.setFillColor(12,20,32); pdf.rect(0,0,PW,13,"F");
+            pdf.setDrawColor(15,30,48); pdf.setLineWidth(0.3); pdf.line(0,13,PW,13);
+            pdf.setTextColor(148,163,184); pdf.setFontSize(8); pdf.setFont("helvetica","bold");
+            pdf.text(clientName+" · "+c.label,7,8.5);
+            pdf.setFont("helvetica","normal"); pdf.setTextColor(71,85,105);
+            pdf.text(yearLabel+"  "+String(i+1)+"/"+String(captured.length),PW-7,8.5,{align:"right"});
+            const mg=5,top=15,avW=PW-mg*2,avH=PH-top-mg;
+            const sc=Math.min(avW/c.w,avH/c.h);
+            const dW=c.w*sc,dH=c.h*sc,x=mg+(avW-dW)/2,y=top+(avH-dH)/2;
+            pdf.addImage(c.dataUrl,"JPEG",x,y,dW,dH);
+          });
+          pdf.save(fname+".pdf");
+        } else {
+          const PptxGen = window.PptxGenJS || window.pptxgen;
+          const pptx = new PptxGen();
+          pptx.layout = "LAYOUT_WIDE";
+          const SW=13.33, SH=7.5;
+          for(const c of captured){
+            const slide = pptx.addSlide();
+            slide.background = {color:"080B12"};
+            // Header bar as filled rectangle
+            slide.addShape("rect", {x:0, y:0, w:SW, h:0.42, fill:{color:"0C1420"}, line:{color:"1E2D45", w:0.5}});
+            slide.addText(clientName+" · "+c.label, {x:0.18,y:0.06,w:8,h:0.3,fontSize:9,color:"94A3B8",bold:true,fontFace:"Arial"});
+            slide.addText(String(yearLabel), {x:SW-1.5,y:0.06,w:1.3,h:0.3,fontSize:8,color:"475569",fontFace:"Arial",align:"right"});
+            const mg=0.12, top=0.48, avW=SW-mg*2, avH=SH-top-mg;
+            const sc=Math.min(avW/c.w, avH/c.h);
+            const dW=c.w*sc, dH=c.h*sc, x=mg+(avW-dW)/2, y=top+(avH-dH)/2;
+            // Strip data URL prefix for PptxGenJS
+            const b64 = c.dataUrl.replace(/^data:image\/jpeg;base64,/, "");
+            slide.addImage({data:"image/jpeg;base64,"+b64, x, y, w:dW, h:dH});
+          }
+          await pptx.writeFile({fileName:fname+".pptx"});
+        }
+        toast.textContent="✅ Export ready!";
+      } catch(err){ console.error(err); toast.textContent="❌ Export failed"; }
+      setTimeout(()=>toast.remove(),3500);
+    };
+  },[]);
+
   const [dragOver,    setDragOver]   = useState(false);
   const [unmapped,    setUnmapped]   = useState([]);
   const [actAccounts, setActAccounts]= useState(null); // account-level structure from Excel import
@@ -2357,7 +2502,7 @@ function Dashboard() {
     {id:"pl",       label:"P&L"},
     {id:"balance",  label:"Balance Sheet"},
     {id:"cashflow", label:"Cash Flow"},
-    {id:"deadlines",label:"Deadlines"},
+    {id:"deadlines",label:"Notifications"},
   ];
 
   const plRows=[
@@ -2418,23 +2563,25 @@ function Dashboard() {
   const totInv=sum(sl(cfInv,S,E));
   const totFin=sum(sl(cfFin,S,E));
 
-  const deadlines=[
-    {month:"January",  due:"Feb 15",status:"done"},
-    {month:"February", due:"Mar 15",status:"done"},
-    {month:"March",    due:"Apr 15",status:"done"},
-    {month:"April",    due:"May 15",status:"done"},
-    {month:"May",      due:"Jun 15",status:"done"},
-    {month:"June",     due:"Aug 15",status:"done"},
-    {month:"July",     due:"Aug 15",status:"done"},
-    {month:"August",   due:"Sep 15",status:"current",daysLeft:6},
-    {month:"September",due:"Oct 15",status:"upcoming",daysLeft:36},
-    {month:"October",  due:"Nov 15",status:"upcoming",daysLeft:67},
-    {month:"November", due:"Dec 15",status:"upcoming",daysLeft:97},
-    {month:"December", due:"Jan 15",status:"upcoming",daysLeft:128},
-  ];
+  const [notifications, setNotifications] = React.useState([
+    {id:1, month:"January",   due:year+"-02-15", submitted:true},
+    {id:2, month:"February",  due:year+"-03-15", submitted:true},
+    {id:3, month:"March",     due:year+"-04-15", submitted:true},
+    {id:4, month:"April",     due:year+"-05-15", submitted:true},
+    {id:5, month:"May",       due:year+"-06-15", submitted:true},
+    {id:6, month:"June",      due:year+"-08-15", submitted:true},
+    {id:7, month:"July",      due:year+"-08-15", submitted:true},
+    {id:8, month:"August",    due:year+"-09-15", submitted:false},
+    {id:9, month:"September", due:year+"-10-15", submitted:false},
+    {id:10,month:"October",   due:year+"-11-15", submitted:false},
+    {id:11,month:"November",  due:year+"-12-15", submitted:false},
+    {id:12,month:"December",  due:(parseInt(year)+1)+"-01-15", submitted:false},
+  ]);
+  const toggleSubmitted = (id) => setNotifications(prev=>prev.map(n=>n.id===id?{...n,submitted:!n.submitted}:n));
+  const updateDue = (id, val) => setNotifications(prev=>prev.map(n=>n.id===id?{...n,due:val}:n));
 
   return (
-    <div style={{minHeight:"100vh",background:"#080b12",color:"#e2e8f0",fontFamily:"'DM Sans',sans-serif"}}>
+    <div data-export-main data-export-year={year} data-client-name={CLIENT_NAME} style={{minHeight:"100vh",background:"#080b12",color:"#e2e8f0",fontFamily:"'DM Sans',sans-serif"}}>
       <style>{STYLE}</style>
 
       <div style={{borderBottom:"1px solid #0c1829",padding:isMobile?"0 16px":"0 32px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,marginRight:isMobile?0:320}}>
@@ -2450,7 +2597,7 @@ function Dashboard() {
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div className="tf-yr-btns" style={{display:"flex",gap:6}}>
             {["2023","2024","2025","2026"].map(y=>(
-              <button key={y} className={"yr-btn"+(year===y?" active":"")} onClick={()=>setYear(y)}>{y}</button>
+              <button key={y} className={"yr-btn"+(year===y?" active":"")} onClick={()=>{ setYear(y); setActLast(ACT_LAST_BY_YEAR[y]??ACT_LAST_DEFAULT); }}>{y}</button>
             ))}
           </div>
           {isMobile && (
@@ -2676,24 +2823,49 @@ function Dashboard() {
         {tab==="deadlines"&&(
           <div style={{background:"#0c1420",border:"1px solid #0f1e30",borderRadius:12,overflow:"hidden"}}>
             <div style={{padding:"14px 22px",borderBottom:"1px solid #0f1e30",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{fontSize:13,fontWeight:600,color:"#94a3b8"}}>Reporting Deadlines · {year}</div>
-              <div style={{fontSize:10,color:AMBER,fontFamily:"'DM Mono',monospace"}}>Next: August → Sep 15 · 6 days</div>
+              <div style={{fontSize:13,fontWeight:600,color:"#94a3b8"}}>Notifications · {year}</div>
+              <div style={{fontSize:10,color:SLATE,fontFamily:"'DM Mono',monospace"}}>{notifications.filter(n=>n.submitted).length}/{notifications.length} submitted</div>
             </div>
-            <div style={{padding:8}}>
-              {deadlines.map((d,i)=>(
-                <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 16px",borderRadius:8,marginBottom:2,background:d.status==="current"?"#0f1e30":"transparent",border:d.status==="current"?"1px solid #1e3a5f":"1px solid transparent"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:14}}>
-                    <div style={{width:7,height:7,borderRadius:"50%",background:d.status==="done"?GREEN:d.status==="current"?AMBER:"#1e2d45"}}/>
-                    <span style={{fontSize:13,color:d.status==="done"?SLATE:d.status==="current"?"#e2e8f0":"#475569",fontWeight:d.status==="current"?600:400}}>{d.month}</span>
+            <div style={{padding:"8px 8px 12px"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 180px 120px 80px",gap:0,padding:"6px 16px 8px",borderBottom:"1px solid #0f1e30"}}>
+                <span style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#334155",textTransform:"uppercase",letterSpacing:"0.08em"}}>Period</span>
+                <span style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#334155",textTransform:"uppercase",letterSpacing:"0.08em"}}>Due Date</span>
+                <span style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#334155",textTransform:"uppercase",letterSpacing:"0.08em"}}></span>
+                <span style={{fontSize:9,fontFamily:"'DM Mono',monospace",color:"#334155",textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"center"}}>Submitted</span>
+              </div>
+              {notifications.map((n)=>{
+                const today = new Date();
+                const dueDate = new Date(n.due);
+                const diffDays = Math.ceil((dueDate-today)/(1000*60*60*24));
+                const isPast = diffDays < 0;
+                const isSoon = diffDays >= 0 && diffDays <= 7;
+                return (
+                  <div key={n.id} style={{display:"grid",gridTemplateColumns:"1fr 180px 120px 80px",gap:0,alignItems:"center",padding:"11px 16px",borderRadius:8,marginBottom:2,
+                    background:n.submitted?"transparent":isSoon?"rgba(245,158,11,0.05)":"transparent",
+                    border:isSoon&&!n.submitted?"1px solid rgba(245,158,11,0.15)":"1px solid transparent"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",flexShrink:0,background:n.submitted?GREEN:isPast?RED:isSoon?AMBER:"#1e2d45"}}/>
+                      <span style={{fontSize:13,color:n.submitted?SLATE:"#e2e8f0",fontWeight:n.submitted?400:500}}>{n.month}</span>
+                    </div>
+                    <input
+                      type="date"
+                      value={n.due}
+                      onChange={e=>updateDue(n.id,e.target.value)}
+                      style={{background:"transparent",border:"1px solid #1e2d45",borderRadius:6,padding:"4px 8px",color:n.submitted?SLATE:"#94a3b8",fontSize:11,fontFamily:"'DM Mono',monospace",outline:"none",cursor:"pointer",width:140}}
+                    />
+                    <span style={{fontSize:10,fontFamily:"'DM Mono',monospace",color:n.submitted?GREEN:isPast?RED:isSoon?AMBER:SLATE}}>
+                      {n.submitted?"✓ done":isPast?`${Math.abs(diffDays)}d overdue`:isSoon?`${diffDays}d left`:`in ${diffDays}d`}
+                    </span>
+                    <div style={{display:"flex",justifyContent:"center"}}>
+                      <div onClick={()=>toggleSubmitted(n.id)}
+                        style={{width:18,height:18,borderRadius:4,border:"1px solid "+(n.submitted?GREEN:"#1e2d45"),background:n.submitted?GREEN+"22":"transparent",
+                          display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:"all 0.15s"}}>
+                        {n.submitted&&<span style={{fontSize:11,color:GREEN,lineHeight:1}}>✓</span>}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:24}}>
-                    <span style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:SLATE}}>Due {d.due}</span>
-                    {d.status==="done"     &&<span style={{fontSize:11,color:GREEN, fontFamily:"'DM Mono',monospace"}}>✓ Submitted</span>}
-                    {d.status==="current"  &&<span style={{fontSize:11,color:AMBER, fontFamily:"'DM Mono',monospace",fontWeight:600}}>{d.daysLeft} days left</span>}
-                    {d.status==="upcoming" &&<span style={{fontSize:11,color:"#334155",fontFamily:"'DM Mono',monospace"}}>in {d.daysLeft} days</span>}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
