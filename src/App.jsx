@@ -2052,6 +2052,9 @@ function CommentsPanel({supabase, clientName, userName, enabled}) {
 }
 
 function Dashboard() {
+  const winW = useWindowWidth();
+  const isMobile = winW < 768;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userEmail,   setUserEmail]  = useState("");
   React.useEffect(()=>{
     if(supabase) supabase.auth.getUser().then(({data})=>{ if(data?.user?.email) setUserEmail(data.user.email); });
