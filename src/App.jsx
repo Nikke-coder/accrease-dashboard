@@ -3407,6 +3407,69 @@ function MfaScreen({onVerified}) {
   );
 }
 
+function MfaEnrollScreen({onDone}) {
+  const [qr,      setQr]      = React.useState(null);
+  const [secret,  setSecret]  = React.useState(null);
+  const [factorId,setFactorId]= React.useState(null);
+  const [code,    setCode]    = React.useState("");
+  const [err,     setErr]     = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      const {data, error} = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "Authenticator" });
+      if(error || !data) { setErr(true); return; }
+      setFactorId(data.id);
+      setQr(data.totp.qr_code);
+      setSecret(data.totp.secret);
+    })();
+  }, []);
+
+  const verify = async () => {
+    if(loading || code.length < 6) return;
+    setLoading(true);
+    const {data:challenge} = await supabase.auth.mfa.challenge({factorId});
+    const {error} = await supabase.auth.mfa.verify({factorId, challengeId: challenge.id, code: code.trim()});
+    if(error) { setErr(true); setLoading(false); setTimeout(()=>setErr(false),1400); }
+    else { setTimeout(()=>onDone(), 500); }
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:"#080b12",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{background:"rgba(8,14,28,0.95)",border:"1px solid #1e2d45",borderRadius:16,padding:"40px 36px",width:380,boxSizing:"border-box",textAlign:"center"}}>
+        <div style={{width:44,height:44,borderRadius:"50%",background:"linear-gradient(135deg,#1d4ed8,#0ea5e9)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:20}}>🔐</div>
+        <div style={{fontSize:18,fontWeight:700,color:"#e2e8f0",marginBottom:6}}>Set up two-factor auth</div>
+        <div style={{fontSize:12,color:"#64748b",marginBottom:24}}>Scan this QR code with Google Authenticator</div>
+        {qr ? (
+          <img src={qr} alt="QR Code" style={{width:180,height:180,borderRadius:12,background:"#fff",padding:8,marginBottom:20}}/>
+        ) : (
+          <div style={{width:180,height:180,background:"#0c1420",borderRadius:12,margin:"0 auto 20px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div style={{color:"#475569",fontSize:11,fontFamily:"'DM Mono',monospace"}}>{err?"Error":"Loading…"}</div>
+          </div>
+        )}
+        {secret && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:10,color:"#475569",fontFamily:"'DM Mono',monospace",marginBottom:6}}>Or enter manually:</div>
+            <div style={{fontSize:12,color:"#93c5fd",fontFamily:"'DM Mono',monospace",letterSpacing:2,background:"#0c1420",padding:"8px 12px",borderRadius:8,border:"1px solid #1e2d45"}}>{secret}</div>
+          </div>
+        )}
+        <div style={{fontSize:11,color:"#64748b",marginBottom:12}}>Enter the 6-digit code to confirm</div>
+        <input
+          value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))}
+          onKeyDown={e=>e.key==="Enter"&&verify()}
+          placeholder="000000" maxLength={6}
+          style={{width:"100%",background:"#0c1420",border:"1px solid "+(err?"#f87171":"#1e2d45"),borderRadius:10,padding:"14px 16px",color:"#e2e8f0",fontSize:22,outline:"none",fontFamily:"'DM Mono',monospace",letterSpacing:8,textAlign:"center",boxSizing:"border-box",marginBottom:14}}
+        />
+        {err&&<div style={{color:"#f87171",fontSize:11,marginBottom:10,fontFamily:"'DM Mono',monospace"}}>Invalid code — try again</div>}
+        <button onClick={verify} disabled={code.length<6||loading}
+          style={{width:"100%",padding:"13px",borderRadius:10,background:code.length===6&&!loading?"linear-gradient(135deg,#1d4ed8,#0ea5e9)":"#0c1420",border:"1px solid "+(code.length===6&&!loading?"#3b82f6":"#1e2d45"),color:code.length===6&&!loading?"#fff":"#64748b",fontSize:13,fontWeight:600,cursor:code.length===6?"pointer":"not-allowed"}}>
+          {loading?"Verifying…":"Activate & continue →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AppWithAuth() {
   const [stage, setStage] = React.useState("login");
 
@@ -3420,6 +3483,9 @@ function AppWithAuth() {
         setStage("denied"); return;
       }
       const {data:aal} = await supabase.auth.mfa.getAuthenticatorAssuranceLevel().catch(()=>({data:null}));
+      const {data:factors} = await supabase.auth.mfa.listFactors().catch(()=>({data:null}));
+      const hasTotp = factors?.totp?.length > 0;
+      if(!hasTotp) { setStage("enroll"); return; }
       if(aal?.nextLevel==="aal2" && aal?.currentLevel!=="aal2") setStage("mfa");
       else setStage("done");
     } catch(e) { setStage("login"); }
@@ -3435,6 +3501,7 @@ function AppWithAuth() {
       </div>
     </div>
   );
+  if(stage==="enroll") return <MfaEnrollScreen onDone={goIn} />;
   if(stage==="mfa")   return <MfaScreen onVerified={goIn} />;
   if(stage==="done")  return <Dashboard/>;
   return <LoginScreen onLogin={goIn} />;
