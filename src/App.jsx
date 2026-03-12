@@ -50,7 +50,7 @@ const SESSION_KEY   = 'accrease_auth';
 const ACCENT        = '#86efac';
 const CLIENT_NAME   = 'Accrease Oy';
 const ANTHROPIC_KEY  = 'PASTE_YOUR_KEY_HERE';
-const ALLOWED_EMAILS = ['lukas.paulikas@accrease.com', "niklas.isaksson@targetflow.fi"];
+const ALLOWED_EMAILS = ['lukas.paulikas@accrease.com', "niklas.isaksson@targetflow.fi", "virpi.lamsa@targetflow.fi"];
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const BLUE="#3b82f6",GREEN="#22c55e",AMBER="#f59e0b",RED="#f87171",PURPLE="#a78bfa",CYAN="#06b6d4",SLATE="#64748b";
@@ -262,13 +262,14 @@ const TblHead = ({visMonths,monthTypes,totalLabel,stickyBg}) => {
   );
 };
 
-const TblRow = ({label,actArr,compArr,color,bold,indent,s,e,monthTypes}) => {
+const TblRow = ({label,actArr,compArr,color,bold,indent,s,e,monthTypes,spot}) => {
   const aSlice = sl(actArr,s,e);
   const cSlice = compArr?sl(compArr,s,e):null;
   const mTypes = monthTypes||aSlice.map(()=>"ACT");
-  const totA   = sum(aSlice.filter((_,i)=>mTypes[i]==="ACT"));
-  const totC   = cSlice?sum(cSlice):null;
-  const totV   = totC!==null?totA-totC:null;
+  const actVals = aSlice.filter((_,i)=>mTypes[i]==="ACT");
+  const totA   = spot ? (actVals[actVals.length-1]??null) : sum(actVals);
+  const totC   = cSlice?(spot ? cSlice[cSlice.length-1]??null : sum(cSlice)):null;
+  const totV   = totC!==null&&totA!==null?totA-totC:null;
   return (
     <tr className="tbl-row" style={{borderBottom:"1px solid #080f1a"}}>
       <td style={{padding:"7px 20px",color,fontWeight:bold?600:400,fontSize:bold?12:11,paddingLeft:indent?32:20,position:"sticky",left:0,background:"#0c1420",zIndex:1}}>{label}</td>
@@ -997,22 +998,25 @@ function GroupStructureTab({entities,selectedEnt,setSelectedEnt,editingEnt,setEd
 
 // ── FiCOA account code ranges → model fields ─────────────────────────────────
 const FICOA_MAP = [
+  // P&L
   { field:"revenue",     ranges:[[3000,3999]], sign: 1 },
   { field:"cogs",        ranges:[[4000,4999]], sign:-1 },
-  { field:"opex",        ranges:[[5000,6999]], sign:-1 },
-  { field:"finExpenses", ranges:[[7000,7799]], sign:-1 },
-  { field:"tax",         ranges:[[7800,7899]], sign:-1 },
-  { field:"depAmort",    ranges:[[8000,8099]], sign:-1 },
+  { field:"opex",        ranges:[[5000,6799],[7000,7999]], sign:-1 }, // personnel + other opex, excl. depreciation
+  { field:"depAmort",    ranges:[[6800,6899]], sign:-1 },             // poistot 6800–6899
+  { field:"finExpenses", ranges:[[8000,8899]], sign:-1 },             // rahoituserät 8000–8899
+  { field:"tax",         ranges:[[8900,8999]], sign:-1 },             // tuloverot 8900–8999
+  // Balance sheet — assets
   { field:"tangibles",   ranges:[[1000,1299]], sign: 1 },
   { field:"inventory",   ranges:[[1300,1499]], sign: 1 },
   { field:"receivables", ranges:[[1500,1799]], sign: 1 },
-  { field:"otherCA",     ranges:[[1900,1999]], sign: 1 },
   { field:"cash",        ranges:[[1800,1899]], sign: 1 },
+  { field:"otherCA",     ranges:[[1900,1999]], sign: 1 },
+  // Balance sheet — liabilities & equity
   { field:"equity",      ranges:[[2000,2499]], sign:-1 },
-  { field:"ltDebt",      ranges:[[2500,2699]], sign:-1 },
-  { field:"stDebt",      ranges:[[2700,2899]], sign:-1 },
-  { field:"payables",    ranges:[[2900,2999]], sign:-1 },
-  { field:"otherCL",     ranges:[[3000,3099]], sign:-1 },
+  { field:"ltDebt",      ranges:[[2500,2599]], sign:-1 },
+  { field:"stDebt",      ranges:[[2600,2699]], sign:-1 },
+  { field:"payables",    ranges:[[2700,2799]], sign:-1 },
+  { field:"otherCL",     ranges:[[2800,2999]], sign:-1 },
 ];
 
 function codeToMapping(code) {
@@ -2074,7 +2078,7 @@ function BalanceTab({actuals,comp,compLabel,mode,setMode,S,E,visMonths,monthType
                 }
                 const aArr=r.aa||(actuals[r.ak]||[]);
                 const cArr=r.ca!==undefined?r.ca:(r.ck?comp[r.ck]:null);
-                return <TblRow key={ri} label={r.label} actArr={aArr} compArr={cArr} color={r.color} bold={r.bold} indent={r.indent} s={S} e={E} monthTypes={monthTypes}/>;
+                return <TblRow key={ri} label={r.label} actArr={aArr} compArr={cArr} color={r.color} bold={r.bold} indent={r.indent} s={S} e={E} monthTypes={monthTypes} spot={true}/>;
               })}
             </tbody>
           </table>
@@ -2510,6 +2514,25 @@ function Dashboard() {
     URL.revokeObjectURL(a.href);
   };
 
+
+  // ── Write snapshot to Supabase for superuser dashboard ───────────────────
+  const writeSnapshot = React.useCallback(async (data, actLast_, yr) => {
+    if(!supabase||!data) return;
+    const lastMonth = actLast_>=0 ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][actLast_] : null;
+    try {
+      await supabase.from("client_snapshots").upsert({
+        client:     CLIENT_NAME,
+        updated_at: new Date().toISOString(),
+        last_month: lastMonth,
+        revenue:    JSON.stringify(data.revenue    ||[]),
+        ebitda:     JSON.stringify(data.ebitda     ||[]),
+        net_profit: JSON.stringify(data.netProfit  ||[]),
+        year:       yr||year,
+        act_last:   actLast_,
+      }, {onConflict:"client"});
+    } catch(e){ console.warn("Snapshot write failed", e); }
+  },[year]);
+
   const exportCSV=()=>{
     const XL=window.XLSX;
     // If actuals were imported from Excel, generate a matching account-level budget template
@@ -2600,7 +2623,7 @@ function Dashboard() {
             const data = {...base, ...tr.mapped};
             if(tr.fileType==="ACT"){
               setActData(data); setActName(file.name);
-              if(tr.actLast >= 0) setActLast(tr.actLast);
+              if(tr.actLast >= 0) { setActLast(tr.actLast); writeSnapshot(data, tr.actLast, tr.fileYear||year); }
             } else {
               setCsvData(data); setCsvName(file.name);
               if(tr.fileType==="FC") setMode("forecast"); else setMode("budget");
@@ -2617,6 +2640,7 @@ function Dashboard() {
           if(isAct){
             setActData(merged);
             setUnmapped(result.unmapped);
+            writeSnapshot(merged, newLast, year);
           } else {
             setCsvData(merged);
           }
