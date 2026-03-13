@@ -461,6 +461,7 @@ Current financial data (${financialContext.period}, ${financialContext.year}):
     <>
       {isMobile && (
         <button
+          data-ai-float-btn
           onClick={() => setSidebarOpen(o => !o)}
           style={{
             position:"fixed", bottom:20, right:20, zIndex:600,
@@ -470,18 +471,18 @@ Current financial data (${financialContext.period}, ${financialContext.year}):
             boxShadow:"0 4px 20px rgba(29,78,216,0.5)",
             display:"flex", alignItems:"center", justifyContent:"center",
           }}>
-          {sidebarOpen ? "✕" : "🤖"}
+          {sidebarOpen ? "✕" : (<svg width="24" height="24" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="e9k_a" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#818cf8" stopOpacity="0.22"/><stop offset="100%" stopColor="#60a5fa" stopOpacity="0"/></radialGradient><radialGradient id="e9k_c" cx="50%" cy="45%" r="50%"><stop offset="0%" stopColor="#1e3a6e"/><stop offset="100%" stopColor="#05060f"/></radialGradient></defs><circle cx="22" cy="22" r="22" fill="url(#e9k_a)"/><g opacity="0.15" stroke="#a5b4fc" strokeLinecap="round"><line x1="22" y1="4" x2="22" y2="0" strokeWidth="0.8"/><line x1="22" y1="40" x2="22" y2="44" strokeWidth="0.8"/><line x1="4" y1="22" x2="0" y2="22" strokeWidth="0.8"/><line x1="40" y1="22" x2="44" y2="22" strokeWidth="0.8"/><line x1="8" y1="8" x2="5" y2="5" strokeWidth="0.6"/><line x1="36" y1="8" x2="39" y2="5" strokeWidth="0.6"/></g><ellipse cx="22" cy="9" rx="9" ry="2.2" fill="none" stroke="#818cf8" strokeWidth="0.9" opacity="0.55"/><circle cx="22" cy="22" r="18" fill="url(#e9k_c)" stroke="rgba(129,140,248,0.35)" strokeWidth="0.8"/><rect x="10" y="13" width="24" height="20" rx="5" fill="rgba(10,16,45,0.95)" stroke="rgba(99,120,220,0.4)" strokeWidth="0.7"/><rect x="12" y="16" width="20" height="8" rx="2.5" fill="rgba(5,6,15,0.9)"/><rect x="13" y="17.5" width="6" height="3" rx="1.5" fill="#1e40af"/><rect x="25" y="17.5" width="6" height="3" rx="1.5" fill="#1e40af"/><rect x="14" y="18" width="4" height="2" rx="1" fill="#60a5fa"/><rect x="26" y="18" width="4" height="2" rx="1" fill="#60a5fa"/><circle cx="16" cy="19" r="0.8" fill="#bfdbfe" opacity="0.9"/><circle cx="28" cy="19" r="0.8" fill="#bfdbfe" opacity="0.9"/><rect x="13" y="26" width="2.5" height="4" rx="0.8" fill="#22c55e" opacity="0.9"/><rect x="17" y="27.5" width="2.5" height="2.5" rx="0.8" fill="#22c55e" opacity="0.7"/><rect x="21" y="26" width="2.5" height="4" rx="0.8" fill="#22c55e" opacity="0.85"/><rect x="25" y="28" width="2.5" height="2" rx="0.8" fill="#22c55e" opacity="0.6"/><rect x="29" y="26" width="2" height="4" rx="0.8" fill="#22c55e" opacity="0.75"/><line x1="22" y1="13" x2="22" y2="8" stroke="rgba(165,180,252,0.5)" strokeWidth="0.8" strokeLinecap="round"/><polygon points="22,5 24,7.5 22,10 20,7.5" fill="#a5b4fc" opacity="0.85"/><circle cx="22" cy="7.5" r="1" fill="white" opacity="0.6"/></svg>)}
         </button>
       )}
       {(!isMobile || sidebarOpen) && (
-    <div style={{position:"fixed",top:0,right:0,width:isMobile?"100vw":320,height:"100vh",
+    <div data-ai-sidebar style={{position:"fixed",top:0,right:0,width:isMobile?"100vw":320,height:"100vh",
       display:"flex",flexDirection:"column",background:"#060a14",
       borderLeft:"1px solid #0f1e30",zIndex:500}}>
 
       {/* Header */}
       <div style={{padding:"14px 18px",borderBottom:"1px solid #0f1e30",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,#0a1628,#060e1e)",flexShrink:0,height:56}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:28,height:28,borderRadius:"50%",background:"linear-gradient(135deg,#1d4ed8,#0ea5e9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#fff",letterSpacing:"-0.5px",flexShrink:0}}>E9K</div>
+          <div style={{width:28,height:28,borderRadius:"50%",background:"#05060f",border:"1px solid rgba(129,140,248,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}><svg width="28" height="28" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="e9k_a2" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#818cf8" stopOpacity="0.22"/><stop offset="100%" stopColor="#60a5fa" stopOpacity="0"/></radialGradient><radialGradient id="e9k_c2" cx="50%" cy="45%" r="50%"><stop offset="0%" stopColor="#1e3a6e"/><stop offset="100%" stopColor="#05060f"/></radialGradient></defs><circle cx="22" cy="22" r="22" fill="url(#e9k_a2)"/><g opacity="0.15" stroke="#a5b4fc" strokeLinecap="round"><line x1="22" y1="4" x2="22" y2="0" strokeWidth="0.8"/><line x1="22" y1="40" x2="22" y2="44" strokeWidth="0.8"/><line x1="4" y1="22" x2="0" y2="22" strokeWidth="0.8"/><line x1="40" y1="22" x2="44" y2="22" strokeWidth="0.8"/></g><ellipse cx="22" cy="9" rx="9" ry="2.2" fill="none" stroke="#818cf8" strokeWidth="0.9" opacity="0.55"/><circle cx="22" cy="22" r="18" fill="url(#e9k_c2)" stroke="rgba(129,140,248,0.35)" strokeWidth="0.8"/><rect x="10" y="13" width="24" height="20" rx="5" fill="rgba(10,16,45,0.95)" stroke="rgba(99,120,220,0.4)" strokeWidth="0.7"/><rect x="12" y="16" width="20" height="8" rx="2.5" fill="rgba(5,6,15,0.9)"/><rect x="13" y="17.5" width="6" height="3" rx="1.5" fill="#1e40af"/><rect x="25" y="17.5" width="6" height="3" rx="1.5" fill="#1e40af"/><rect x="14" y="18" width="4" height="2" rx="1" fill="#60a5fa"/><rect x="26" y="18" width="4" height="2" rx="1" fill="#60a5fa"/><circle cx="16" cy="19" r="0.8" fill="#bfdbfe" opacity="0.9"/><circle cx="28" cy="19" r="0.8" fill="#bfdbfe" opacity="0.9"/><rect x="13" y="26" width="2.5" height="4" rx="0.8" fill="#22c55e" opacity="0.9"/><rect x="17" y="27.5" width="2.5" height="2.5" rx="0.8" fill="#22c55e" opacity="0.7"/><rect x="21" y="26" width="2.5" height="4" rx="0.8" fill="#22c55e" opacity="0.85"/><rect x="25" y="28" width="2.5" height="2" rx="0.8" fill="#22c55e" opacity="0.6"/><rect x="29" y="26" width="2" height="4" rx="0.8" fill="#22c55e" opacity="0.75"/><line x1="22" y1="13" x2="22" y2="8" stroke="rgba(165,180,252,0.5)" strokeWidth="0.8" strokeLinecap="round"/><polygon points="22,5 24,7.5 22,10 20,7.5" fill="#a5b4fc" opacity="0.85"/><circle cx="22" cy="7.5" r="1" fill="white" opacity="0.6"/></svg></div>
           <div>
             <div style={{fontSize:12,fontWeight:700,color:"#e2e8f0"}}>EBITDA-9000</div>
             <div style={{fontSize:9,color:loading?AMBER:GREEN,fontFamily:"'DM Mono',monospace"}}>{loading?"Crunching numbers…":"● Online"}</div>
@@ -1570,7 +1571,7 @@ function SettingsMenu({actData,actName,actLast,setActData,setActName,setActLast,
 
 
 // ── ForecastTab ───────────────────────────────────────────────────────────────
-function ForecastTab({actuals,comp,compLabel,mode,setMode,S,E,fcRevData,fcEqData,fcCashData}) {
+function ForecastTab({actuals,comp,compLabel,mode,setMode,S,E,fcRevData,fcEqData,fcCashData,downloadTemplate}) {
   const [scnItem, setScnItem] = React.useState("revenue");
   const [scnDir,  setScnDir]  = React.useState("decline");
   const [scnPct,  setScnPct]  = React.useState(10);
@@ -2251,58 +2252,69 @@ function Dashboard() {
   const [actName,     setActName]    = useState(null);
   const [actLast,     setActLast]    = useState(ACT_LAST_DEFAULT);
 
-  // ── PDF / PPT Export ─────────────────────────────────────────────────────
+  // ── PDF / PPT Export (screenshot-based, sidebar hidden) ─────────────────
   React.useEffect(()=>{
-    const loadScript = (url) => new Promise((res,rej)=>{
-      if(document.querySelector(`script[src="${url}"]`)){ res(); return; }
-      const s=document.createElement("script"); s.src=url; s.onload=res; s.onerror=rej;
-      document.head.appendChild(s);
-    });
+    const loadScript = (url) => new Promise((res,rej)=>{ if(document.querySelector(`script[src="${url}"]`)){ res(); return; } const s=document.createElement("script"); s.src=url; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+
     window._tfExport = async (type) => {
-      const TABS_ORDER = ["group","kpis","forecast","pl","balance","cashflow","deadlines"];
-      const TAB_LABELS = {group:"Group Structure",kpis:"KPIs",forecast:"Scenario Analysis",pl:"P&L",balance:"Balance Sheet",cashflow:"Cash Flow",deadlines:"Notifications"};
-      const mainEl = document.querySelector("[data-export-main]");
-      const clientName = mainEl?.dataset?.clientName || "Dashboard";
-      const yearLabel  = mainEl?.dataset?.exportYear  || new Date().getFullYear();
+      const TABS_ORDER  = ["group","kpis","forecast","pl","balance","cashflow","deadlines"];
+      const TAB_LABELS  = {group:"Group Structure",kpis:"KPIs",forecast:"Scenario Analysis",pl:"P&L",balance:"Balance Sheet",cashflow:"Cash Flow",deadlines:"Notifications"};
+      const mainEl      = document.querySelector("[data-export-main]");
+      const clientName  = mainEl?.dataset?.clientName || "Dashboard";
+      const yearLabel   = mainEl?.dataset?.exportYear  || new Date().getFullYear();
+
       const toast = document.createElement("div");
       toast.style.cssText="position:fixed;bottom:24px;right:24px;background:#0c1420;border:1px solid #3b82f6;border-radius:10px;padding:12px 20px;color:#60a5fa;font-family:'DM Mono',monospace;font-size:12px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.6)";
       toast.textContent="⏳ Preparing export…"; document.body.appendChild(toast);
+
+      // ── Hide sidebar before capturing ──────────────────────────────────
+      const sidebar = document.querySelector("[data-ai-sidebar]");
+      const sidebarWasVisible = sidebar && sidebar.style.display !== "none";
+      if(sidebar) sidebar.style.display = "none";
+      const floatBtn = document.querySelector("[data-ai-float-btn]");
+      if(floatBtn) floatBtn.style.display = "none";
+
       try {
         await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
         if(type==="pdf") await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
         if(type==="ppt") await loadScript("https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js");
+
         if(!mainEl){ toast.textContent="❌ Export target not found"; setTimeout(()=>toast.remove(),2000); return; }
+
         const captured = [];
         const allTabBtns = Array.from(document.querySelectorAll(".tab-btn"));
         for(const tabId of TABS_ORDER){
           toast.textContent=`📸 Capturing ${TAB_LABELS[tabId]}…`;
           const btn = allTabBtns.find(b=>b.textContent.trim()===TAB_LABELS[tabId]);
-          if(btn){ btn.click(); await new Promise(r=>setTimeout(r,450)); }
+          if(btn){ btn.click(); await new Promise(r=>setTimeout(r,3500)); }
           const canvas = await window.html2canvas(mainEl,{
-            backgroundColor:"#080b12",scale:1.5,useCORS:true,logging:false,
-            width:1280,height:Math.min(mainEl.scrollHeight,2800),windowWidth:1280,scrollX:0,scrollY:0
+            backgroundColor:"#080b12", scale:1.5, useCORS:true, logging:false,
+            width:mainEl.offsetWidth, height:Math.min(mainEl.scrollHeight,2800),
+            windowWidth:mainEl.offsetWidth, scrollX:0, scrollY:0
           });
-          captured.push({label:TAB_LABELS[tabId],dataUrl:canvas.toDataURL("image/jpeg",0.90),w:canvas.width,h:canvas.height});
+          captured.push({label:TAB_LABELS[tabId], dataUrl:canvas.toDataURL("image/jpeg",0.90), w:canvas.width, h:canvas.height});
         }
+
         toast.textContent=`📦 Building ${type.toUpperCase()}…`;
         await new Promise(r=>setTimeout(r,80));
         const fname = clientName.replace(/\s+/g,"_")+"_"+yearLabel+"_Board_Report";
+
         if(type==="pdf"){
           const {jsPDF} = window.jspdf;
           const pdf = new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
-          const PW=297,PH=210;
+          const PW=297, PH=210;
           captured.forEach((c,i)=>{
             if(i>0) pdf.addPage();
             pdf.setFillColor(8,11,18); pdf.rect(0,0,PW,PH,"F");
             pdf.setFillColor(12,20,32); pdf.rect(0,0,PW,13,"F");
-            pdf.setDrawColor(15,30,48); pdf.setLineWidth(0.3); pdf.line(0,13,PW,13);
-            pdf.setTextColor(148,163,184); pdf.setFontSize(8); pdf.setFont("helvetica","bold");
-            pdf.text(clientName+" · "+c.label,7,8.5);
+            pdf.setDrawColor(59,130,246); pdf.setLineWidth(0.4); pdf.line(0,13,PW,13);
+            pdf.setTextColor(226,232,240); pdf.setFontSize(8.5); pdf.setFont("helvetica","bold");
+            pdf.text(clientName+" · "+c.label, 7, 8.5);
             pdf.setFont("helvetica","normal"); pdf.setTextColor(71,85,105);
-            pdf.text(yearLabel+"  "+String(i+1)+"/"+String(captured.length),PW-7,8.5,{align:"right"});
-            const mg=5,top=15,avW=PW-mg*2,avH=PH-top-mg;
-            const sc=Math.min(avW/c.w,avH/c.h);
-            const dW=c.w*sc,dH=c.h*sc,x=mg+(avW-dW)/2,y=top+(avH-dH)/2;
+            pdf.text(yearLabel+"  "+String(i+1)+"/"+String(captured.length), PW-7, 8.5, {align:"right"});
+            const mg=5, top=15, avW=PW-mg*2, avH=PH-top-mg;
+            const sc=Math.min(avW/c.w, avH/c.h);
+            const dW=c.w*sc, dH=c.h*sc, x=mg+(avW-dW)/2, y=top+(avH-dH)/2;
             pdf.addImage(c.dataUrl,"JPEG",x,y,dW,dH);
           });
           pdf.save(fname+".pdf");
@@ -2314,24 +2326,32 @@ function Dashboard() {
           for(const c of captured){
             const slide = pptx.addSlide();
             slide.background = {color:"080B12"};
-            // Header bar as filled rectangle
-            slide.addShape("rect", {x:0, y:0, w:SW, h:0.42, fill:{color:"0C1420"}, line:{color:"1E2D45", w:0.5}});
-            slide.addText(clientName+" · "+c.label, {x:0.18,y:0.06,w:8,h:0.3,fontSize:9,color:"94A3B8",bold:true,fontFace:"Arial"});
-            slide.addText(String(yearLabel), {x:SW-1.5,y:0.06,w:1.3,h:0.3,fontSize:8,color:"475569",fontFace:"Arial",align:"right"});
-            const mg=0.12, top=0.48, avW=SW-mg*2, avH=SH-top-mg;
+            slide.addShape("rect",{x:0,y:0,w:SW,h:0.42,fill:{color:"0C1420"},line:{color:"1E2D45",w:0.5}});
+            slide.addShape("rect",{x:0,y:0.42,w:SW,h:0.025,fill:{color:"3B82F6"}});
+            slide.addText(clientName+" · "+c.label, {x:0.18,y:0.07,w:8,h:0.28,fontSize:9,color:"94A3B8",bold:true,fontFace:"Arial"});
+            slide.addText(String(yearLabel), {x:SW-1.5,y:0.07,w:1.3,h:0.28,fontSize:8,color:"475569",fontFace:"Arial",align:"right"});
+            const mg=0.12, top=0.5, avW=SW-mg*2, avH=SH-top-mg;
             const sc=Math.min(avW/c.w, avH/c.h);
             const dW=c.w*sc, dH=c.h*sc, x=mg+(avW-dW)/2, y=top+(avH-dH)/2;
-            // Strip data URL prefix for PptxGenJS
-            const b64 = c.dataUrl.replace(/^data:image\/jpeg;base64,/, "");
+            const b64 = c.dataUrl.replace(/^data:image\/jpeg;base64,/,"");
             slide.addImage({data:"image/jpeg;base64,"+b64, x, y, w:dW, h:dH});
           }
           await pptx.writeFile({fileName:fname+".pptx"});
         }
         toast.textContent="✅ Export ready!";
-      } catch(err){ console.error(err); toast.textContent="❌ Export failed"; }
+      } catch(err){ console.error(err); toast.textContent="❌ Export failed: "+err.message; }
+
+      // ── Restore sidebar ──────────────────────────────────────────────────
+      if(sidebar && sidebarWasVisible) sidebar.style.display = "";
+      if(floatBtn) floatBtn.style.display = "";
+
       setTimeout(()=>toast.remove(),3500);
     };
   },[]);
+
+
+
+
 
   const [dragOver,    setDragOver]   = useState(false);
   const [unmapped,    setUnmapped]   = useState([]);
@@ -2343,6 +2363,26 @@ function Dashboard() {
   const [entities,    setEntities]   = useState([{id:"e1",name:"Accrease Oy",type:"operating",parentId:null,ownership:100,color:ACCENT}]);
   const [selectedEnt, setSelectedEnt]= useState("e1");
   const [editingEnt,  setEditingEnt] = useState(null);
+  // ── Persist entities to snapshot whenever they change ──────────────────────
+  const snapshotReady = React.useRef(false); // true once loadSnapshot has completed
+  const entitiesRef   = React.useRef(null);
+  React.useEffect(()=>{
+    // Skip until snapshot has loaded (prevents overwriting saved data with defaults)
+    if(!snapshotReady.current) return;
+    if(!supabase) return;
+    const timer = setTimeout(async()=>{
+      try {
+        await supabase.from("client_snapshots").upsert({
+          client:   CLIENT_NAME,
+          entities: JSON.stringify(entities),
+          updated_at: new Date().toISOString(),
+        },{onConflict:"client"});
+      } catch(e){ console.warn("Entities save failed", e); }
+    }, 800);
+    return ()=>clearTimeout(timer);
+  },[entities]);
+
+
   // Load SheetJS once
   React.useEffect(()=>{
     if(!window._xlLoaded){
@@ -2516,11 +2556,11 @@ function Dashboard() {
 
 
   // ── Write snapshot to Supabase for superuser dashboard ───────────────────
-  const writeSnapshot = React.useCallback(async (data, actLast_, yr) => {
+  const writeSnapshot = React.useCallback(async (data, actLast_, yr, opts={}) => {
     if(!supabase||!data) return;
     const lastMonth = actLast_>=0 ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][actLast_] : null;
     try {
-      await supabase.from("client_snapshots").upsert({
+      const payload = {
         client:     CLIENT_NAME,
         updated_at: new Date().toISOString(),
         last_month: lastMonth,
@@ -2529,9 +2569,54 @@ function Dashboard() {
         net_profit: JSON.stringify(data.netProfit  ||[]),
         year:       yr||year,
         act_last:   actLast_,
-      }, {onConflict:"client"});
+        act_data:   JSON.stringify(data),
+        act_name:   opts.actName  || actName  || null,
+      };
+      // Only overwrite csv fields if explicitly provided
+      if(opts.csvData !== undefined) payload.csv_data = JSON.stringify(opts.csvData);
+      if(opts.csvName !== undefined) payload.csv_name = opts.csvName;
+      if(opts.mode    !== undefined) payload.mode     = opts.mode;
+      if(opts.entities!== undefined) payload.entities = JSON.stringify(opts.entities);
+      await supabase.from("client_snapshots").upsert(payload, {onConflict:"client"});
     } catch(e){ console.warn("Snapshot write failed", e); }
-  },[year]);
+  },[year, actName]);
+
+  // ── Load snapshot on mount ───────────────────────────────────────────────
+  const snapshotLoaded = React.useRef(false);
+  React.useEffect(()=>{
+    if(!supabase||snapshotLoaded.current) return;
+    snapshotLoaded.current = true;
+    (async()=>{
+      try {
+        const {data:rows} = await supabase
+          .from("client_snapshots")
+          .select("*")
+          .eq("client", CLIENT_NAME)
+          .limit(1);
+        if(!rows||!rows.length) return;
+        const s = rows[0];
+        if(s.act_data)  { try{ const d=JSON.parse(s.act_data);  setActData(d);  }catch(e){} }
+        if(s.act_name)  setActName(s.act_name);
+        if(s.act_last!=null) setActLast(s.act_last);
+        if(s.csv_data)  { try{ const d=JSON.parse(s.csv_data);  setCsvData(d);  }catch(e){} }
+        if(s.csv_name)  setCsvName(s.csv_name);
+        if(s.mode)      setMode(s.mode);
+        if(s.year)      setYear(s.year);
+        if(s.entities)  { try{ const e=JSON.parse(s.entities);  setEntities(e); }catch(e){} }
+      } catch(e){ console.warn("Snapshot load failed", e); }
+      finally { snapshotReady.current = true; }
+    })();
+  },[]);
+
+  // ── Confirm overwrite helper ─────────────────────────────────────────────
+  const confirmOverwrite = (isAct, fileYear) => {
+    const existing = isAct ? actData : csvData;
+    const existingName = isAct ? actName : csvName;
+    if(!existing) return true; // nothing to overwrite
+    const typeLabel = isAct ? "ACT" : (mode==="forecast"?"FC":"BUD");
+    const msg = `Replace existing ${typeLabel} data${existingName?" ("+existingName+")":""}${fileYear?" for "+fileYear:""}?`;
+    return window.confirm(msg);
+  };
 
   const exportCSV=()=>{
     const XL=window.XLSX;
@@ -2622,11 +2707,16 @@ function Dashboard() {
             const base = tr.fileType==="ACT" ? actBase : budBase;
             const data = {...base, ...tr.mapped};
             if(tr.fileType==="ACT"){
+              if(!confirmOverwrite(true, tr.fileYear||year)) return;
               setActData(data); setActName(file.name);
-              if(tr.actLast >= 0) { setActLast(tr.actLast); writeSnapshot(data, tr.actLast, tr.fileYear||year); }
+              if(tr.actLast >= 0) { setActLast(tr.actLast); writeSnapshot(data, tr.actLast, tr.fileYear||year, {actName:file.name}); }
             } else {
+              if(!confirmOverwrite(false, tr.fileYear||year)) return;
+              const newMode = tr.fileType==="FC"?"forecast":"budget";
               setCsvData(data); setCsvName(file.name);
-              if(tr.fileType==="FC") setMode("forecast"); else setMode("budget");
+              setMode(newMode);
+              // Save csv to snapshot
+              if(supabase){ supabase.from("client_snapshots").upsert({client:CLIENT_NAME,csv_data:JSON.stringify(data),csv_name:file.name,mode:newMode,updated_at:new Date().toISOString()},{onConflict:"client"}).catch(e=>console.warn(e)); }
             }
             if(tr.fileYear && tr.fileYear !== year) setYear(tr.fileYear);
             return;
@@ -2638,11 +2728,14 @@ function Dashboard() {
           const base=isAct?actBase:budBase;
           const merged={...base,...result.mapped};
           if(isAct){
+            if(!confirmOverwrite(true, year)) return;
             setActData(merged);
             setUnmapped(result.unmapped);
-            writeSnapshot(merged, newLast, year);
+            writeSnapshot(merged, newLast, year, {actName:file.name});
           } else {
+            if(!confirmOverwrite(false, year)) return;
             setCsvData(merged);
+            if(supabase){ supabase.from("client_snapshots").upsert({client:CLIENT_NAME,csv_data:JSON.stringify(merged),csv_name:file.name,mode,updated_at:new Date().toISOString()},{onConflict:"client"}).catch(e=>console.warn(e)); }
           }
         }catch(err){alert("Excel error: "+err.message);}
       };
@@ -2764,7 +2857,7 @@ function Dashboard() {
   const updateDue = (id, val) => setNotifications(prev=>prev.map(n=>n.id===id?{...n,due:val}:n));
 
   return (
-    <div data-export-main data-export-year={year} data-client-name={CLIENT_NAME} style={{minHeight:"100vh",background:"#080b12",color:"#e2e8f0",fontFamily:"'DM Sans',sans-serif"}}>
+    <div data-export-main data-export-year={year} data-client-name={CLIENT_NAME} data-act-data={actData?JSON.stringify(actData):""} data-csv-data={csvData?JSON.stringify(csvData):""} data-entities={JSON.stringify(entities)} data-mode={mode} data-start-m={startM} data-end-m={endM} data-act-last={actLast} style={{minHeight:"100vh",background:"#080b12",color:"#e2e8f0",fontFamily:"'DM Sans',sans-serif"}}>
       <style>{STYLE}</style>
 
       <div style={{borderBottom:"1px solid #0c1829",padding:isMobile?"0 16px":"0 32px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,marginRight:isMobile?0:320}}>
@@ -2784,7 +2877,7 @@ function Dashboard() {
             ))}
           </div>
           {isMobile && (
-            <button onClick={()=>setSidebarOpen(o=>!o)} style={{background:"linear-gradient(135deg,#1d4ed8,#0ea5e9)",border:"none",borderRadius:8,padding:"6px 10px",color:"#fff",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:700,cursor:"pointer"}}>E9K</button>
+            <button onClick={()=>setSidebarOpen(o=>!o)} style={{background:"rgba(29,78,216,0.15)",border:"1px solid rgba(129,140,248,0.25)",borderRadius:8,padding:"4px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}><svg width="20" height="20" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="e9k_a3" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#818cf8" stopOpacity="0.22"/><stop offset="100%" stopColor="#60a5fa" stopOpacity="0"/></radialGradient><radialGradient id="e9k_c3" cx="50%" cy="45%" r="50%"><stop offset="0%" stopColor="#1e3a6e"/><stop offset="100%" stopColor="#05060f"/></radialGradient></defs><circle cx="22" cy="22" r="22" fill="url(#e9k_a3)"/><ellipse cx="22" cy="9" rx="9" ry="2.2" fill="none" stroke="#818cf8" strokeWidth="0.9" opacity="0.55"/><circle cx="22" cy="22" r="18" fill="url(#e9k_c3)" stroke="rgba(129,140,248,0.35)" strokeWidth="0.8"/><rect x="10" y="13" width="24" height="20" rx="5" fill="rgba(10,16,45,0.95)" stroke="rgba(99,120,220,0.4)" strokeWidth="0.7"/><rect x="12" y="16" width="20" height="8" rx="2.5" fill="rgba(5,6,15,0.9)"/><rect x="14" y="18" width="4" height="2" rx="1" fill="#60a5fa"/><rect x="26" y="18" width="4" height="2" rx="1" fill="#60a5fa"/><rect x="13" y="26" width="2.5" height="4" rx="0.8" fill="#22c55e" opacity="0.9"/><rect x="17" y="27.5" width="2.5" height="2.5" rx="0.8" fill="#22c55e" opacity="0.7"/><rect x="21" y="26" width="2.5" height="4" rx="0.8" fill="#22c55e" opacity="0.85"/><rect x="25" y="28" width="2.5" height="2" rx="0.8" fill="#22c55e" opacity="0.6"/><rect x="29" y="26" width="2" height="4" rx="0.8" fill="#22c55e" opacity="0.75"/><line x1="22" y1="13" x2="22" y2="8" stroke="rgba(165,180,252,0.5)" strokeWidth="0.8" strokeLinecap="round"/><polygon points="22,5 24,7.5 22,10 20,7.5" fill="#a5b4fc" opacity="0.85"/></svg><span style={{fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#93c5fd"}}>9000</span></button>
           )}
           <CommentsPanel
             supabase={supabase}
@@ -2913,6 +3006,7 @@ function Dashboard() {
             actuals={actuals} comp={comp} compLabel={compLabel}
             mode={mode} setMode={setMode} S={S} E={E}
             fcRevData={fcRevData} fcEqData={fcEqData} fcCashData={fcCashData}
+            downloadTemplate={downloadTemplate}
           />
         )}
 
