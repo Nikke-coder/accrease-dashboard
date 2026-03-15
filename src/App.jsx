@@ -3671,7 +3671,7 @@ function Dashboard() {
   const [dragOverA,   setDragOverA]  = useState(false);
   const [startM,      setStartM]     = useState(0);
   const [endM,        setEndM]       = useState(11);
-  const [entities,    setEntities]   = useState([{id:"e1",name:"Stremet Oy",type:"operating",parentId:null,ownership:100,color:ACCENT}]);
+  const [entities,    setEntities]   = useState([{id:"e1",name:CLIENT_NAME,type:"operating",parentId:null,ownership:100,color:ACCENT}]);
   const [selectedEnt, setSelectedEnt]= useState("e1");
   const [editingEnt,  setEditingEnt] = useState(null);
   // ── Persist entities to snapshot whenever they change ──────────────────────
@@ -4345,7 +4345,7 @@ function Dashboard() {
             <span style={{fontSize:10,fontWeight:700,color:"#fff",fontFamily:"'DM Mono',monospace"}}>TF</span>
           </div>
           <div>
-            <div style={{fontSize:14,fontWeight:600}}>Stremet Oy</div>
+            <div style={{fontSize:14,fontWeight:600}}>{CLIENT_NAME}</div>
             <div style={{fontSize:10,color:"#334155",fontFamily:"'DM Mono',monospace"}}>Financial Dashboard · {year}</div>
           </div>
         </div>
@@ -4360,7 +4360,7 @@ function Dashboard() {
           )}
           <CommentsPanel
             supabase={supabase}
-            clientName="Stremet Oy"
+            clientName={CLIENT_NAME}
             userName={userEmail||"Board Member"}
             enabled={true}
           />
